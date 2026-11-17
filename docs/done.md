@@ -1,6 +1,6 @@
 # Pyrrha: done
 
-Recommendations that were built, moved here from RECOMMENDATIONS.md. Numbers
+Recommendations that were built, moved here from recommendations.md. Numbers
 are kept, so references between the two files still work.
 
 ### 1. Idle lock, screen off, suspend
@@ -138,7 +138,7 @@ are kept, so references between the two files still work.
   one for an empty monitors array. A line that isn't valid json is skipped,
   where the scanner read what it could.
 - **Why:** `src/layout.rs` has its own small reader for mango's json; the
-  shared reader in `src/json.rs` came later (noted under item 13 in DONE.md).
+  shared reader in `src/json.rs` came later (noted under item 13 in done.md).
 - **Hooks in:** `src/layout.rs` only, with its tests kept.
 - **To settle:** nothing, it's a cleanup.
 
@@ -212,7 +212,7 @@ are kept, so references between the two files still work.
   the shortcuts and the slider, not the monitor's own buttons (no DDC
   polling). Not while the system panel is open.
 - **Why:** brightness is only in the system panel (a slider over DDC/CI,
-  `src/brightness.rs`); volume has shortcuts and a popup (item 2 in DONE.md).
+  `src/brightness.rs`); volume has shortcuts and a popup (item 2 in done.md).
 - **Hooks in:** a brightness version of the volume popup in `src/osd.rs`,
   shown when it changes; `amane ipc call brightness up|down` going through
   `brightness::set` (newest value only, one ddcutil call at a time), with mango
@@ -223,7 +223,7 @@ are kept, so references between the two files still work.
   polling DDC (about 0.4 s per read).
 
 ### 20. Audit findings (2026-11-11)
-- **Status:** done in four steps (see HISTORY.md, session "audit"):
+- **Status:** done in four steps (see history.md, session "audit"):
   - the most important bugs: Tailscale `up` hanging on a needed login,
     time limits for the external calls that read output
     (`src/command.rs`), weather and cover retries, popups held after a
@@ -612,8 +612,9 @@ are kept, so references between the two files still work.
   page's bottom, so lower down up to five soft edges stacked per pixel, mixed
   differently per column. Each stroke now stops where a nearer hill starts
   (`ridges::visible_spans`), so every pixel belongs to one hill; a row
-  through the nearest hill went from 34 colours to 25. The original is kept
-  in `archive/desktop/` with a screenshot. Tests: `desktop::ridges::`.
+  through the nearest hill went from 34 colours to 25. The original (source
+  and a screenshot) is in git history under `archive/desktop/`, removed after
+  commit a24f5b0. Tests: `desktop::ridges::`.
 
 ### 45. Tide
 - **Status:** done (2026-11-16), the tenth design, filling the picker's row:

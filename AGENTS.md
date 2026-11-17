@@ -12,8 +12,8 @@ anything. More detail, read when the task touches it:
 - `README.md`: installing on a new machine, the dependencies, and the
   per-host settings (`src/settings.rs`); update it when a dependency or a
   setting changes
-- `RECOMMENDATIONS.md` (open items and the "Already decided" list, read before
-  proposing anything), `DONE.md` (built, by number), `HISTORY.md` (why)
+- `docs/recommendations.md` (open items and the "Already decided" list, read before
+  proposing anything), `docs/done.md` (built, by number), `docs/history.md` (why)
 
 ## Where things live
 - This folder is `~/git/pyrrha`, its own git repository; `~/.config/amane`
@@ -70,7 +70,7 @@ anything. More detail, read when the task touches it:
   runs `nixos-rebuild`. A new file a flake must see: `git add --intent-to-add`.
 - Git: the user commits; don't commit, push or stage. Check `git status` /
   `git log` first; don't revert the user's changes.
-- Recommendations: keep statuses current; built items move to `DONE.md` with
+- Recommendations: keep statuses current; built items move to `docs/done.md` with
   their number; new ideas get the next number (50 was the last).
 - Code style: lowercase comments, `/* */` blocks, `//` lines, saying why;
   every module starts with a block comment; descriptive names, no

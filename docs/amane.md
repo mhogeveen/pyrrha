@@ -1,6 +1,6 @@
 # Pyrrha: amane gotchas
 
-Limits of the amane library the shell works around. `RECOMMENDATIONS.md` has
+Limits of the amane library the shell works around. `recommendations.md` has
 them written up for upstream.
 
 - **Keys:** no modifiers and no key repeat in panels. Delete, Insert, Page
@@ -41,5 +41,5 @@ them written up for upstream.
   any exclusive surface, even hidden ones.
 - **Idle cost:** amane's `Apps` rescans icon themes every 30 s and `Network`
   re-reads saved profiles each second once started; accepted.
-- The upstream list in `RECOMMENDATIONS.md` has these written up as issue texts.
+- The upstream list in `recommendations.md` has these written up as issue texts.
 

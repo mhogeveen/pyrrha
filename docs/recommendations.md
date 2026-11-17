@@ -3,7 +3,7 @@
 Ideas for the shell, kept so they aren't lost between sessions. Each item has a
 status (open, blocked, parked), why it's worth doing, where it would hook in and
 what to settle first. Update the status as things change; once an item is
-built, move it to DONE.md, keeping its number.
+built, move it to done.md, keeping its number.
 
 `amane compile` only builds `src/`, so this file doesn't affect the shell.
 
@@ -55,7 +55,7 @@ Settled earlier, no need to revisit:
 
 ## Gaps worth closing first
 
-Nothing open here right now (item 4, the keybinds, is in DONE.md).
+Nothing open here right now (item 4, the keybinds, is in done.md).
 
 ## Polish on what exists
 
@@ -68,7 +68,7 @@ Common desktop-shell features the shell doesn't have yet, picked from a list
 on 2026-11-12. Not wanted (from the same list): a system tray, the focused
 window's title in the bar, a window switcher, a screen color picker, calendar
 events, OCR of a screenshot region. A caffeine/idle-inhibit toggle was on
-this list too, until it was wanted after all (item 36, in DONE.md).
+this list too, until it was wanted after all (item 36, in done.md).
 
 ### 30. Emoji and glyph picker
 - **Status:** blocked on amane. Emoji draw as blank space (no colour glyphs,

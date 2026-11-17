@@ -64,8 +64,8 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
     dark near, each a sum of three seeded waves, an accent sun behind. Each
     stroke stops where a nearer hill starts (`visible_spans`), so soft edges
     at fractional positions never stack. The first version, where every
-    stroke ran to the page's bottom, is kept in `archive/desktop/` (source and
-    a screenshot); `archive/` is outside `src/` and never compiled.
+    stroke ran to the page's bottom, is in git history (`archive/desktop/`,
+    source and a screenshot, removed after commit a24f5b0).
   - `desktop/pines.rs` (art): a pine forest at night, four rows far to near
     (`bg4` to `bg1`) on their own ground bands, trees as stacked tiers
     narrowing to the tip (`tree_bars`), an accent moon half behind the far
@@ -206,19 +206,19 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
   zombies when the write fails).
 - `keybinds.rs`: mango's binds from `~/.config/mango/config.conf` as
   sections of keys and actions in words (`parse`, folding, `matches` for
-  the search; see DONE.md item 23).
+  the search; see done.md item 23).
 - `doctor.rs`: `amane-shell doctor` (main() checks the argument before the
   app starts): what this host is missing, from programs on `$PATH`, `systemctl`,
   `busctl`, `fc-list`, `/dev/i2c-*` and `tailscale debug prefs`, each with the
   feature and a fix; reads the settings for terminal, annotator, recorder,
-  units, render node (DONE.md 50).
+  units, render node (done.md 50).
 - `settings.rs`: the per-machine values (terminal, annotator, recorder, the
   idle and night-light units, the gpu render node, cpu/gpu hwmon drivers, the
   wallpaper/screenshot/screencast folders, the default weather place), compiled
   in: `Settings::default()`, and `src/settings/<hostname>.rs` changing what a
   host needs, picked by `/proc/sys/kernel/hostname`; `settings()` is a plain
   static, safe in views. `config_home()` is also how `keybinds.rs` finds
-  mango's config (DONE.md 49).
+  mango's config (done.md 49).
 - `state.rs`: `path(name)`/`save(name, text)` in the state folder, saved
   through `write_atomically` (temp file + rename, also used by the
   notification history); `runtime_dir()` and `runtime_path(name)` for
