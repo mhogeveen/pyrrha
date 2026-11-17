@@ -7,6 +7,27 @@ audio, network, Bluetooth and VPN panels, a calendar with weather,
 wallpapers and desktop widgets, screenshots and screen recording, a session
 menu, a lock screen, and on-screen popups for volume and brightness.
 
+## Screenshots
+
+![The desktop with the bar and the "ridges" desktop design](assets/desktop.png)
+
+<table>
+  <tr>
+    <td><img src="assets/launcher.png" alt="Launcher"></td>
+    <td><img src="assets/system.png" alt="System panel" width="320"></td>
+    <td><img src="assets/calendar.png" alt="Calendar and weather" width="320"></td>
+  </tr>
+  <tr>
+    <td align="center">Launcher</td>
+    <td align="center">System panel: usage, accent and switches</td>
+    <td align="center">Calendar with the forecast</td>
+  </tr>
+</table>
+
+![The keybind sheet, read from mango's config](assets/keybinds.png)
+
+![The desktop designs in the wallpaper picker](assets/desktops.png)
+
 This README covers installing it on a new machine and the per-machine
 settings. For how the code is organised, see `AGENTS.md` and `docs/`.
 
