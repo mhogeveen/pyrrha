@@ -1,5 +1,5 @@
 /*
- * amane-shell: a desktop shell for mango on the amane library. this starts the
+ * pyrrha: a desktop shell for mango on the amane library. this starts the
  * parts that must run from launch, registers the ipc handlers, and makes every
  * window once per monitor; the order of the windows is their stacking order,
  * bottom first: wallpaper, bar, backdrop, popups, every panel, the screenshot
@@ -50,6 +50,9 @@ fn main() {
     if std::env::args().nth(1).as_deref() == Some("doctor") {
         std::process::exit(doctor::run());
     }
+
+    // moves the state folders from before the rename, before anything writes them
+    state::migrate();
 
     // locks on suspend and `loginctl lock-session`
     session::watch_logind();

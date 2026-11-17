@@ -5,7 +5,7 @@
  *
  * an entry is decoded with `cliphist decode` on a thread the first time it's
  * selected, never the whole history; pictures are written to
- * $XDG_RUNTIME_DIR/amane-shell/clipboard/<id>, which lives in memory and is gone
+ * $XDG_RUNTIME_DIR/pyrrha/clipboard/<id>, which lives in memory and is gone
  * after logging out, and amane's image loader tells png from jpeg by the bytes
  */
 
@@ -145,7 +145,7 @@ pub fn forget_all() {
 
 // the system's temporary folder stands in without a runtime folder, as previews always need a place
 fn folder() -> PathBuf {
-    state::runtime_path(FOLDER).unwrap_or_else(|| env::temp_dir().join("amane-shell").join(FOLDER))
+    state::runtime_path(FOLDER).unwrap_or_else(|| env::temp_dir().join("pyrrha").join(FOLDER))
 }
 
 const FOLDER: &str = "clipboard";

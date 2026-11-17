@@ -1,6 +1,6 @@
 /*
  * the notification history across shell restarts: the notifications still in the
- * center are written to $XDG_RUNTIME_DIR/amane-shell/notifications.json, and a
+ * center are written to $XDG_RUNTIME_DIR/pyrrha/notifications.json, and a
  * restarted shell reads them back as "Earlier" in the center. logging out or
  * rebooting empties the runtime folder, so the history is the session's
  *

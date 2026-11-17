@@ -1,6 +1,6 @@
-# amane shell
+# Pyrrha
 
-A desktop shell for the [MangoWM](https://github.com/mangowm/mango) Wayland
+Pyrrha is a desktop shell for the [MangoWM](https://github.com/mangowm/mango) Wayland
 compositor, written in Rust on the [amane](https://github.com/MystiaFin/amane)
 library. It provides the bar, launcher, clipboard history, notifications,
 audio, network, Bluetooth and VPN panels, a calendar with weather,
@@ -211,14 +211,17 @@ To add a host called `atlas`:
 - **Wallpapers:** put pictures in the wallpapers folder, then open the
   picker with `SUPER+w`.
 - **Weather place:** `amane ipc call weather location <latitude> <longitude> <name>`.
-  It's kept in `~/.local/state/amane-shell/weather`.
+  It's kept in `~/.local/state/pyrrha/weather`.
 - **Tailscale:** run `sudo tailscale set --operator=$USER` once, so the VPN
   card can connect, disconnect and pick exit nodes.
 - **Monitors and scaling:** panels have fixed sizes, chosen for a
   2560×1440 logical screen. 1920×1080 fits; a small laptop screen at a
   high scale can be cramped. Check with `mmsg get all-monitors`.
 - **Accent, animations, desktop design:** in the system panel and the
-  wallpaper picker. They're kept in `~/.local/state/amane-shell/`.
+  wallpaper picker. They're kept in `~/.local/state/pyrrha/` (an older
+  `~/.local/state/amane-shell/` is moved there once, at start).
+- **Binary name:** amane builds the shell as `amane-shell` and picks that
+  name itself, so the binary and process keep it.
 - **Machine docs:** update `docs/machine.md` and the screenshot coordinates
   in `AGENTS.md` for the new monitor and keyboard.
 

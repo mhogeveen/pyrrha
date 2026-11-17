@@ -1,7 +1,7 @@
 /*
  * cover art for the audio panel's "Now playing": players give a file:// path or
  * an https:// link. a path is used as it is; a link is fetched once with curl
- * into $XDG_RUNTIME_DIR/amane-shell/covers, named after the link, so the same
+ * into $XDG_RUNTIME_DIR/pyrrha/covers, named after the link, so the same
  * cover is never fetched twice (a failed one is tried again after RETRY).
  * logging out empties the folder
  *

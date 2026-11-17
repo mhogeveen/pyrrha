@@ -1,4 +1,4 @@
-# amane shell: subsystems
+# Pyrrha: subsystems
 
 How the larger parts work, numbered as `modules.md` refers to them.
 
@@ -45,7 +45,7 @@ amane's `Notifications` service is the daemon. `popups.rs` shows cards
 top-right on the focused monitor (hidden while a right-side panel is open),
 5 s each, critical ones until handled, hover holds. The center lists live
 ones newest first, then restored ones under "Earlier". `history.rs` writes the
-newest 50 (live + restored) to `$XDG_RUNTIME_DIR/amane-shell/notifications.json`
+newest 50 (live + restored) to `$XDG_RUNTIME_DIR/pyrrha/notifications.json`
 within a second of a change (temp file + rename); a restarted shell reads them
 back as read-only `Kept` copies: no action buttons (amane's ids restart at 1,
 senders can't be reached), clicking does nothing, × and Clear all remove them
@@ -210,7 +210,7 @@ minutes, it reads `/` (statvfs), the cpu and gpu temperatures
 `temp:cpu`, `temp:gpu`, `unit:system:<unit>`, `unit:user:<unit>`). A key not
 warned about yet sends one notification (app "System"; every one is
 Critical, so it stays until dismissed). The warned keys are kept in
-`$XDG_RUNTIME_DIR/amane-shell/health-warned`, so `amane restart` doesn't warn
+`$XDG_RUNTIME_DIR/pyrrha/health-warned`, so `amane restart` doesn't warn
 again and a new login does. Limits: a temperature past its sensor's
 `tempN_max`, or 85 °C without one; `/` at 90%. A warned temperature clears
 only 5 °C under its limit and the disk under 88%, so a reading that hovers

@@ -1,4 +1,4 @@
-# amane shell: module map
+# Pyrrha: module map
 
 What each file in `src/` does. Section numbers like "see 5.6" refer to
 `subsystems.md`.
@@ -179,7 +179,7 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
   pipes the capture into satty (configured in `~/.nixos/home/satty.nix`).
 - `recording.rs`: `Recording` (seconds recorded, for the bar), wf-recorder
   start/stop (SIGINT), the `record` IPC; picks up a recording still running
-  after a restart from `$XDG_RUNTIME_DIR/amane-shell/recording`.
+  after a restart from `$XDG_RUNTIME_DIR/pyrrha/recording`.
   `frame_view`: an always-mapped, click-through overlay window per monitor
   that frames a recorded region (`RecordedRegion`), just outside it.
 - `system.rs`: `SystemInfo` (os, kernel, uptime, disk, temperatures, network
@@ -222,6 +222,6 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
 - `state.rs`: `path(name)`/`save(name, text)` in the state folder, saved
   through `write_atomically` (temp file + rename, also used by the
   notification history); `runtime_dir()` and `runtime_path(name)` for
-  `$XDG_RUNTIME_DIR/amane-shell`.
+  `$XDG_RUNTIME_DIR/pyrrha`.
 - `calendar.rs`, `calculator.rs`, `usage.rs`, `clipboard_preview.rs`, `clock.rs`.
 

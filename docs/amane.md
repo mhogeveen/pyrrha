@@ -1,4 +1,4 @@
-# amane shell: amane gotchas
+# Pyrrha: amane gotchas
 
 Limits of the amane library the shell works around. `RECOMMENDATIONS.md` has
 them written up for upstream.

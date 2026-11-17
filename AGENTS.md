@@ -1,6 +1,6 @@
-# amane shell: context for agents
+# Pyrrha: context for agents
 
-A desktop shell for the MangoWM Wayland compositor, in Rust on the
+Pyrrha, a desktop shell for the MangoWM Wayland compositor, in Rust on the
 [amane](https://github.com/MystiaFin/amane) library. Read this before changing
 anything. More detail, read when the task touches it:
 
@@ -27,8 +27,8 @@ anything. More detail, read when the task touches it:
 - Per-machine values (programs, units, gpu, sensors, folders, weather place):
   `Settings::default()` in `src/settings.rs`, a host changing only what it
   needs in `src/settings/<hostname>.rs` (compiled; picked by hostname).
-- State: `~/.local/state/amane-shell/` (survives reboots),
-  `$XDG_RUNTIME_DIR/amane-shell/` (until logout).
+- State: `~/.local/state/pyrrha/` (survives reboots),
+  `$XDG_RUNTIME_DIR/pyrrha/` (until logout).
 - Mango config: `~/.nixos/home/mango.nix` (home-manager writes
   `~/.config/mango/config.conf` from it; `~/.nixos/config/mango/` is unused,
   edits there do nothing). NixOS
@@ -37,7 +37,10 @@ anything. More detail, read when the task touches it:
 ## Workflow
 - Build `amane compile` (zero warnings, fix every one); format
   `rustfmt --edition 2024 src/main.rs`; test `./test.sh` (`./test.sh system::`
-  filters; 224 tests), add tests for pure logic.
+  filters; 225 tests), add tests for pure logic.
+- Name: the shell is Pyrrha, but the binary and process stay `amane-shell`
+  (amane generates the Cargo package and picks that name); state folders are
+  `pyrrha/`, moved from `amane-shell/` once at start (`state::migrate`).
 - Check a host `~/.cache/amane/amane-shell doctor` (runs instead of the shell;
   lists missing programs, units, services; exit 1 when a required one is missing).
 - Restart `amane restart` after a compile (loses panel state; fine for checks).

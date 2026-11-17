@@ -1,4 +1,4 @@
-# amane shell: history
+# Pyrrha: history
 
 How the shell came to be the way it is: what was built, what was decided, and
 what was tried and dropped. Newest session last. `DONE.md` has the details of

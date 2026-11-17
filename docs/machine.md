@@ -1,4 +1,4 @@
-# amane shell: machine facts
+# Pyrrha: machine facts
 
 The machine the shell runs on (host `prometheus`).
 

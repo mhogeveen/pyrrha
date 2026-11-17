@@ -5,7 +5,7 @@
  * opening the calendar fetches when the forecast is over 30 minutes old, and the
  * bar's clock, which shows the weather now, when it's over 2 hours old; the
  * place is set with `amane ipc call weather location <latitude> <longitude> <name>`
- * and kept in ~/.local/state/amane-shell/weather; until then the settings' place
+ * and kept in ~/.local/state/pyrrha/weather; until then the settings' place
  */
 
 pub mod forecast;

@@ -4,7 +4,7 @@
  *
  * every launch adds 1 to an app's score, and a score halves every week it isn't
  * used, so an app used daily stays on top and one used a lot months ago drifts
- * down. kept in ~/.local/state/amane-shell/launches, one line per app:
+ * down. kept in ~/.local/state/pyrrha/launches, one line per app:
  *
  *   name<TAB>score<TAB>last used, unix seconds
  *

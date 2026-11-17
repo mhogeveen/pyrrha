@@ -1,4 +1,4 @@
-# amane shell: recommendations
+# Pyrrha: recommendations
 
 Ideas for the shell, kept so they aren't lost between sessions. Each item has a
 status (open, blocked, parked), why it's worth doing, where it would hook in and

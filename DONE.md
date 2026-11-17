@@ -1,4 +1,4 @@
-# amane shell: done
+# Pyrrha: done
 
 Recommendations that were built, moved here from RECOMMENDATIONS.md. Numbers
 are kept, so references between the two files still work.
@@ -707,3 +707,14 @@ are kept, so references between the two files still work.
   the check before the shell has ever started. Every call has a time limit;
   checks that need `systemctl` or `busctl` say unknown, not missing, when
   those aren't there. Tests: `doctor::`.
+
+### 51. Renamed to Pyrrha
+- **Status:** done (2026-11-17): the shell is called Pyrrha (repo
+  `~/git/pyrrha`); docs, comments and the state folders
+  (`~/.local/state/pyrrha/`, `$XDG_RUNTIME_DIR/pyrrha/`) use the name.
+- **How it fits:** `state::migrate()` runs first in `main()` and renames an
+  old `amane-shell/` folder to `pyrrha/` when the new one isn't there yet, so
+  the accent, weather place and launch counts are kept. The binary and
+  process stay `amane-shell`: amane generates the Cargo package itself and
+  names it that, so `Cargo.toml`, `test.sh` and the doctor's process check
+  keep the old name. Tests: `state::`.
