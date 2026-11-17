@@ -7,6 +7,10 @@ audio, network, Bluetooth and VPN panels, a calendar with weather,
 wallpapers and desktop widgets, screenshots and screen recording, a session
 menu, a lock screen, and on-screen popups for volume and brightness.
 
+> **A personal project.** Pyrrha is my own shell, built for my machine
+> and my taste. It's shared as-is: expect hard-coded choices, breaking
+> changes without notice, and no support. Feel free to borrow from it.
+
 ## Screenshots
 
 ![The desktop with the bar and the "ridges" desktop design](assets/desktop.png)
@@ -262,3 +266,8 @@ To add a host called `atlas`:
 - **No notifications:** check that no other notification daemon is running.
 - **Recording falls back to software:** the VA-API drivers are missing, or
   `render_node` points at the wrong GPU.
+
+## Acknowledgements
+
+Pyrrha is based on the [cendre](https://github.com/Aejkatappaja/cendre)
+theme by Aejkatappaja.
