@@ -512,6 +512,33 @@ pub fn fuzzy(query: &str, text: &str) -> Option<i32> {
     Some(score)
 }
 
+// how far a match on what something is for ranks below the same match on its name
+const DESCRIPTION_PENALTY: i32 = 10;
+
+// a match on the name, or on what it's for below that
+pub fn name_or_description(query: &str, name: &str, description: &str) -> Option<i32> {
+    let name = fuzzy(query, name);
+    let description = fuzzy(query, description).map(|score| score - DESCRIPTION_PENALTY);
+
+    name.max(description)
+}
+
+/*
+ * best score first, dropping what doesn't match; the sort is stable, so equal
+ * scores keep the order the items came in (alphabetical apps, the registry's
+ * panels, mango's layouts)
+ */
+pub fn ranked<T>(items: impl IntoIterator<Item = T>, score: impl Fn(&T) -> Option<i32>) -> Vec<T> {
+    let mut scored: Vec<(i32, T)> = items
+        .into_iter()
+        .filter_map(|item| score(&item).map(|points| (points, item)))
+        .collect();
+
+    scored.sort_by(|a, b| b.0.cmp(&a.0));
+
+    scored.into_iter().map(|(_, item)| item).collect()
+}
+
 // the width of a help row's first column, what to press or type
 const HELP_KEYS: f32 = 140.0;
 
@@ -551,7 +578,28 @@ pub fn message(t: &Theme, text: &str) -> Box<dyn Widget> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Cursor, Key, follow_window, fuzzy, hotkey, step_highlight};
+    use super::{
+        Cursor, Key, follow_window, fuzzy, hotkey, name_or_description, ranked, step_highlight,
+    };
+
+    #[test]
+    fn ranking_puts_the_best_first_and_keeps_ties_in_order() {
+        let scores = [("a", Some(1)), ("b", None), ("c", Some(5)), ("d", Some(1))];
+
+        let order = ranked(scores, |(_, score)| *score);
+        let names: Vec<&str> = order.iter().map(|(name, _)| *name).collect();
+
+        assert_eq!(names, vec!["c", "a", "d"]);
+    }
+
+    #[test]
+    fn a_name_match_beats_the_same_description_match() {
+        let on_name = name_or_description("wall", "wallpaper", "pictures");
+        let on_description = name_or_description("wall", "pictures", "wallpaper");
+
+        assert!(on_name > on_description);
+        assert_eq!(name_or_description("zzz", "wallpaper", "pictures"), None);
+    }
 
     #[test]
     fn a_highlight_starts_at_the_top_and_stays_in_the_list() {

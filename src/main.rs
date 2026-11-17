@@ -1,6 +1,6 @@
 /*
  * pyrrha: a desktop shell for mango on the amane library. this starts the
- * parts that must run from launch, registers the ipc handlers, and makes every
+ * parts that must run from launch, registers the ipc handlers (ipc.rs), and makes every
  * window once per monitor; the order of the windows is their stacking order,
  * bottom first: wallpaper, bar, backdrop, popups, every panel, the screenshot
  * menu (over the panels it can capture), the lock screen
@@ -23,6 +23,7 @@ mod desktop;
 mod doctor;
 mod health;
 mod idle;
+mod ipc;
 mod json;
 mod keybinds;
 mod layout;
@@ -76,15 +77,14 @@ fn main() {
     // warns once about a hot cpu or gpu, a nearly full disk or a failed unit
     health::start();
 
-    App::new()
-        .font("BlexMono Nerd Font")
-        .ipc("panel", panels::ipc)
-        .ipc("lock", session::lock_ipc)
-        .ipc("accent", theme::accent_ipc)
-        .ipc("weather", weather::ipc)
-        .ipc("media", osd::media_ipc)
-        .ipc("brightness", brightness::ipc)
-        .ipc("record", recording::ipc)
+    // every command in ipc's table, which the launcher's ! mode lists too
+    let app = ipc::COMMANDS
+        .iter()
+        .fold(App::new().font("BlexMono Nerd Font"), |app, command| {
+            app.ipc(command.name, command.handler)
+        });
+
+    app
         // first, so it is the bottom-most window
         .window_per_monitor(wallpaper::view)
         .window_per_monitor(bar::view)

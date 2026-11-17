@@ -719,3 +719,27 @@ are kept, so references between the two files still work.
   process stay `amane-shell`: amane generates the Cargo package itself and
   names it that, so `Cargo.toml`, `test.sh` and the doctor's process check
   keep the old name. Tests: `state::`.
+
+### 52. Launcher `!` calls IPC commands
+- **Status:** done (2026-11-17): `!` in the launcher lists the shell's IPC
+  commands (`!` alone lists all, a partial name ranks them by name and
+  description); a full name takes the rest as arguments, so `!accent next` or
+  `!panel toggle wallpaper` work like `amane ipc call ...`. The reply comes
+  back as a notification from "Pyrrha" for commands whose reply is something
+  to read (`IpcCommand::notify`: accent, weather); the others only notify a
+  problem (`ipc::problem`: usage, unknown name, "no player", "not recording"). The help's "Enter" row made room for it.
+  Tab completes: `!bri` Tab gives `!brightness `, which lists `up` and `down`
+  as rows; Tab again fills in the selected one. A bare `!accent`, or a word
+  that is itself an option (`!panel close`, not `close-all`), keeps the call as
+  typed on top so Enter runs exactly that.
+- **How it fits:** amane keeps its handlers in a private map it can't list, so
+  `src/ipc.rs` holds the table (`COMMANDS`) and `main()` registers every entry
+  from it; one place to add a handler, with an `options` function giving the
+  words that can come next for completion (`Picker::complete` lets any picker
+  fill in on Tab; Tab no longer moves the selection in pickers or numbered
+  menus, up/down do). The launcher closes itself first and
+  calls the handler from a thread once it's gone (`panels::until_closed`):
+  `!record menu` opens the screenshot menu, which replaces nothing, so run at
+  once it showed while the launcher hid and crashed the shell (the layer
+  surface protocol error). The reply goes out from that thread too, since
+  `send` waits on the daemon. Tests: `ipc::`, `panels::launcher::`.

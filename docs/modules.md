@@ -5,7 +5,9 @@ What each file in `src/` does. Section numbers like "see 5.6" refer to
 
 `src/main.rs` declares the modules, starts the background pieces
 (`session::watch_logind`, the bluetooth agent, clipboard recording, notification
-history, the osd watcher) and registers the IPC handlers and windows. Windows
+history, the osd watcher) and registers the IPC handlers (from the table in
+`ipc.rs`, `ipc::COMMANDS`: name, handler, argument hint, description; a new
+handler goes there, and the launcher's `!` mode lists it too) and windows. Windows
 are made per monitor; the order matters for stacking: wallpaper first, then the
 bar, backdrop, notification popups, osd, every panel, and the lock screen.
 
@@ -96,13 +98,30 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
   `ROWS` = 8, rows, footers, `help_row`, `hotkey` for 1–9, `scroll_delta`),
   and the corner panels' highlight lists (`step_highlight`, `follow_window`,
   `highlight_list`, `highlight_delta`). `panels::letter(key)` gives a typed
-  letter, lowercased.
+  letter, lowercased. Search: `fuzzy` scores a match, `ranked` sorts by a
+  score with ties in the input's order (launcher modes, layout picker), and
+  `name_or_description` ranks a description match below a name match.
 - `picker.rs`: the `Picker` trait for search panels (search box, list,
   optional preview and footer, `?` in an empty search shows a help screen).
 - `menu.rs`: the `Menu` trait for numbered menus with confirm-twice rows.
-- `launcher.rs` (Picker): apps by frecency (`usage.rs`), `=sum` calculator
-  (`calculator.rs`, Enter copies), `>cmd` runs, `>>cmd` runs in foot, `:name`
-  opens a panel (`panels::launchable`, by name or `PanelDef::description`).
+- `launcher/` (Picker), one file per mode; a new mode is a `Mode` and `Entry`
+  variant in `mod.rs` (the compiler lists every `match` to extend) plus its own
+  file. The help is full (6 rows + 2 shared = `ROWS`), so a sixth mode merges
+  two help lines or grows `ROWS`.
+  - `mod.rs`: reads the prefix (`mode()`), the `Entry` rows, and the `Picker`
+    hooks, each handing off to a mode's file; `=sum` goes to `calculator.rs`
+    (Enter copies, `copy()` here).
+  - `apps.rs`: apps by frecency (`usage.rs`), a match on the program run
+    ranking below one on the name.
+  - `run.rs`: `>cmd` in the background, `>>cmd` in the settings' terminal.
+  - `panel_names.rs`: `:name` opens a panel (`panels::launchable`, by name or
+    `PanelDef::description`).
+  - `commands.rs`: `!name args` closes the launcher, then calls an IPC command
+    from `ipc::COMMANDS` once it has gone (`panels::until_closed`), posting the
+    reply as a notification from a thread where `IpcCommand::notify` or
+    `ipc::problem` says so; Tab completes the selected row up to its next word
+    from `IpcCommand::options` (the `Picker::complete` hook; Tab never moves the
+    selection, in pickers or menus).
 - `clipboard.rs` (Picker): cliphist history, × deletes, "Clear history"
   clicked twice, preview pane (`clipboard_preview.rs`).
 - `layout.rs` (Picker): mango layouts, the one in use striped.

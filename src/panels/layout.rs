@@ -84,25 +84,14 @@ fn matches(query: &str) -> Vec<&'static Layout> {
         return LAYOUTS.iter().collect();
     }
 
-    let mut scored: Vec<(i32, &'static Layout)> = LAYOUTS
-        .iter()
-        .filter_map(|choice| {
-            let symbol = choice.symbol.eq_ignore_ascii_case(query);
+    // equal scores keep mango's order
+    list::ranked(LAYOUTS.iter(), |choice| {
+        let symbol = choice.symbol.eq_ignore_ascii_case(query);
 
-            let score = fuzzy(query, &choice.label());
-
-            let score = match (score, symbol) {
-                (Some(score), true) => Some(score + SYMBOL_BONUS),
-                (None, true) => Some(SYMBOL_BONUS),
-                (score, false) => score,
-            };
-
-            score.map(|score| (score, choice))
-        })
-        .collect();
-
-    // stable, so equal scores keep mango's order
-    scored.sort_by(|a, b| b.0.cmp(&a.0));
-
-    scored.into_iter().map(|(_, choice)| choice).collect()
+        match (fuzzy(query, &choice.label()), symbol) {
+            (Some(score), true) => Some(score + SYMBOL_BONUS),
+            (None, true) => Some(SYMBOL_BONUS),
+            (score, false) => score,
+        }
+    })
 }

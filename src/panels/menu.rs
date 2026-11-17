@@ -1,6 +1,6 @@
 /*
  * a short numbered menu, shared by the screenshot and session panels: press a
- * row's number to choose it, or move with up/down or tab and press enter, or
+ * row's number to choose it, or move with up/down and press enter, or
  * click; escape is handled by the panel manager
  *
  * there's no search box, so number keys reach the menu instead of being typed.
@@ -121,7 +121,7 @@ fn key_pressed<M: Menu>(key: Key) {
     }
 
     let delta = match key {
-        Key::Down | Key::Tab => 1,
+        Key::Down => 1,
         Key::Up => -1,
         Key::Enter => return choose::<M>(cursor.selected(count)),
         _ => return,

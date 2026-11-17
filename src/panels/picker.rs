@@ -1,6 +1,7 @@
 /*
  * a search box over a list, shared by the launcher, clipboard and layout panels:
- * type to filter, up/down or tab to move, enter or click to pick, the mouse
+ * type to filter, up/down to move, tab to complete where a picker can (the
+ * launcher's ! commands), enter or click to pick, the mouse
  * wheel to scroll; escape is handled by the panel manager
  *
  * each panel implements Picker with its items, how a row looks and what picking
@@ -67,10 +68,19 @@ pub trait Picker: Send + Sync + 'static {
 
     // after the selection moved or the search changed
     fn moved() {}
+
+    /*
+     * what Tab fills the search box with for the selected item, like a command
+     * completed up to its next argument; None, or the text already there,
+     * leaves Tab doing nothing
+     */
+    fn complete(_query: &str, _selected: &Self::Item) -> Option<String> {
+        None
+    }
 }
 
 // under every picker's own help lines
-const SHARED_HELP: [(&str, &str); 2] = [("↑ ↓  Tab", "move the selection"), ("Esc", "close")];
+const SHARED_HELP: [(&str, &str); 2] = [("↑ ↓", "move the selection"), ("Esc", "close")];
 
 const HELP: &str = "?";
 
@@ -209,8 +219,13 @@ fn close_help<P: Picker>() -> bool {
 
 // the search box keeps letters and enter, the rest of the keys come here
 fn key_pressed<P: Picker>(key: Key) {
+    // Tab only completes, it doesn't move: free for what a picker fills in
+    if key == Key::Tab {
+        return complete::<P>();
+    }
+
     let delta = match key {
-        Key::Down | Key::Tab => 1,
+        Key::Down => 1,
         Key::Up => -1,
         Key::Enter => return submit::<P>(),
         _ => return,
@@ -225,6 +240,31 @@ fn key_pressed<P: Picker>(key: Key) {
     Search::<P>::write().cursor.step(delta, count);
 
     P::moved();
+}
+
+/*
+ * fills the search box with the selected item's completion, if it has one that
+ * changes the text; set_text puts the cursor at the end but doesn't run
+ * on_change, so the search follows by hand
+ */
+fn complete<P: Picker>() {
+    if Search::<P>::read().help {
+        return;
+    }
+
+    let Some(item) = selected::<P>() else {
+        return;
+    };
+
+    let query = Search::<P>::read().query.clone();
+
+    if let Some(text) = P::complete(&query, &item)
+        && text != query
+    {
+        TextInput::set_text(P::INPUT, &text);
+
+        changed::<P>(text);
+    }
 }
 
 // the item the selection is on, if any

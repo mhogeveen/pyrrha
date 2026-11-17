@@ -236,6 +236,19 @@ const SWAP_DELAY: Duration = Duration::from_millis(100);
  */
 const FADE: Duration = Duration::from_millis(100);
 
+/*
+ * how long after closing a panel another surface may show: its fade, if on,
+ * then SWAP_DELAY. for work that may show one itself, like the launcher's !
+ * calls (`!record menu` opens the screenshot menu, which replaces nothing)
+ */
+pub fn until_closed() -> Duration {
+    if Animations::read().enabled() {
+        FADE + SWAP_DELAY
+    } else {
+        SWAP_DELAY
+    }
+}
+
 impl Service for Panels {
     fn new() -> Self {
         Self {

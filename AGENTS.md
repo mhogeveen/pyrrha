@@ -45,8 +45,11 @@ anything. More detail, read when the task touches it:
   lists missing programs, units, services; exit 1 when a required one is missing).
 - Restart `amane restart` after a compile (loses panel state; fine for checks).
 - IPC `amane ipc call <name> ...`: `panel open|close|toggle <name>`,
-  `close-all`, `list`; `lock`; `accent`; `weather`; `media`; `brightness up|down`;
-  `record stop|menu` (menu: stops a recording, else toggles the screenshot menu).
+  `close-all`, `list`; `lock`; `accent [next|<name>]`;
+  `weather [refresh|location <lat> <lon> <name>]`; `media play-pause|next|previous`;
+  `brightness up|down`; `record stop|menu` (menu: stops a recording, else
+  toggles the screenshot menu). All listed in `src/ipc.rs` (`COMMANDS`), which
+  registers them; the launcher's `!` calls them too (`!accent next`).
 - Screenshots: `grim -g "x,y wxh"` takes logical coordinates (amane's widget
   units); the png comes out at physical size (× scale). On the AOC U27B3AF
   (`docs/machine.md`; 2560×1440 logical, scale 1.5): top-right panels
@@ -71,7 +74,7 @@ anything. More detail, read when the task touches it:
 - Git: the user commits; don't commit, push or stage. Check `git status` /
   `git log` first; don't revert the user's changes.
 - Recommendations: keep statuses current; built items move to `docs/done.md` with
-  their number; new ideas get the next number (50 was the last).
+  their number; new ideas get the next number (52 was the last).
 - Code style: lowercase comments, `/* */` blocks, `//` lines, saying why;
   every module starts with a block comment; descriptive names, no
   abbreviations; constants for every size and timing.
