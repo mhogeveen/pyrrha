@@ -20,6 +20,7 @@ use super::ui::{self, BUTTON, CORNER_WIDTH, PADDING};
 use super::{NOTIFICATIONS, Panels, SESSION, SYSTEM, WALLPAPER, panel};
 use crate::animations::Animations;
 use crate::brightness::{self, Level};
+use crate::eye_breaks::EyeBreaks;
 use crate::health::Temperatures;
 use crate::idle;
 use crate::night_light;
@@ -35,8 +36,8 @@ const LINE: f32 = 20.0;
 // the diagnostics rows at most: cpu, memory, disk, temperatures, network and a laptop's battery
 const DIAGNOSTICS_MOST: f32 = 6.0;
 
-// the settings card: accent, brightness, animations, night light and the idle timers
-const SETTINGS_ROWS: f32 = 5.0;
+// the settings card: accent, brightness, animations, night light, the idle timers and eye breaks
+const SETTINGS_ROWS: f32 = 6.0;
 
 /*
  * the header and the details line, the diagnostics card, and the settings
@@ -83,6 +84,7 @@ const KEY_WALLPAPER: char = 'w';
 const KEY_ANIMATIONS: char = 'a';
 const KEY_NIGHT_LIGHT: char = 'l';
 const KEY_IDLE: char = 'i';
+const KEY_EYE_BREAKS: char = 'e';
 
 pub fn view(monitor: &Monitor) -> LayerWindow {
     let base = ui::corner(HEIGHT, "amane-system");
@@ -106,6 +108,7 @@ fn content(t: &Theme, monitor: &str) -> Rectangle {
         Box::new(animations_setting(t)),
         Box::new(night_light_setting(t)),
         Box::new(idle_setting(t)),
+        Box::new(eye_breaks_setting(t)),
     ];
 
     /*
@@ -142,6 +145,7 @@ fn key_pressed(key: Key) {
         Some(KEY_ANIMATIONS) => Animations::toggle(),
         Some(KEY_NIGHT_LIGHT) => night_light::toggle(),
         Some(KEY_IDLE) => idle::toggle(),
+        Some(KEY_EYE_BREAKS) => EyeBreaks::toggle(),
         _ => {}
     }
 }
@@ -457,6 +461,43 @@ fn animations_setting(t: &Theme) -> Row {
             .child(Text::new("Animations").size(ui::TEXT_NOTE).color(t.fg)),
         ui::checkbox(t, enabled, KEY_ANIMATIONS, |_| Animations::toggle()),
     ])
+    .gap(GAP)
+    .align(Center)
+    .height(BUTTON)
+}
+
+/*
+ * a break for the eyes every 20 minutes (src/eye_breaks.rs), with the time
+ * to the next one beside the checkbox while on; the name flips it too
+ */
+fn eye_breaks_setting(t: &Theme) -> Row {
+    let (enabled, countdown) = {
+        let breaks = EyeBreaks::read();
+
+        (breaks.enabled(), String::from(breaks.countdown()))
+    };
+
+    Row::new(children![
+        Rectangle::new()
+            .width(NAME)
+            .height(BUTTON)
+            .align_child(Start, Center)
+            .cursor(Pointer)
+            .on_click(|_| EyeBreaks::toggle())
+            .child(Text::new("Eye breaks").size(ui::TEXT_NOTE).color(t.fg)),
+        ui::checkbox(t, enabled, KEY_EYE_BREAKS, |_| EyeBreaks::toggle()),
+        Rectangle::new()
+            .width(Parent)
+            .height(BUTTON)
+            .align_child(Start, Center)
+            .child(
+                Text::new(countdown)
+                    .size(ui::TEXT_SMALL)
+                    .color(t.fg_dim)
+                    .elide()
+            ),
+    ])
+    .width(Parent)
     .gap(GAP)
     .align(Center)
     .height(BUTTON)

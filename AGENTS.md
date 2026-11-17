@@ -37,7 +37,7 @@ anything. More detail, read when the task touches it:
 ## Workflow
 - Build `amane compile` (zero warnings, fix every one); format
   `rustfmt --edition 2024 src/main.rs`; test `./test.sh` (`./test.sh system::`
-  filters; 225 tests), add tests for pure logic.
+  filters; 254 tests), add tests for pure logic.
 - Name: the shell is Pyrrha, but the binary and process stay `amane-shell`
   (amane generates the Cargo package and picks that name); state folders are
   `pyrrha/`, moved from `amane-shell/` once at start (`state::migrate`).
@@ -74,7 +74,7 @@ anything. More detail, read when the task touches it:
 - Git: the user commits; don't commit, push or stage. Check `git status` /
   `git log` first; don't revert the user's changes.
 - Recommendations: keep statuses current; built items move to `docs/done.md` with
-  their number; new ideas get the next number (52 was the last).
+  their number; new ideas get the next number (53 was the last).
 - Code style: lowercase comments, `/* */` blocks, `//` lines, saying why;
   every module starts with a block comment; descriptive names, no
   abbreviations; constants for every size and timing.

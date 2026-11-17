@@ -101,6 +101,9 @@ this list too, until it was wanted after all (item 36, in done.md).
   and `>`) or `amane ipc call timer ...`; a countdown in `src/bar.rs`; a
   notification (`notifications::send`) when it ends. The end time kept in the
   runtime folder (`state::runtime_path`) so a shell restart keeps it.
+  `src/timer.rs` (built with item 53, eye breaks) already has the parts:
+  `Countdown` for a plain timer, `Cycle` for pomodoro phases, `remaining`
+  for the time left in words and `card` for the popup.
 - **To settle:** plain timers, pomodoro cycles (25/5) or both; one or several
   at once; where in the bar; cancel/pause from the bar.
 

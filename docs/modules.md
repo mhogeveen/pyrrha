@@ -76,6 +76,14 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
     positions; no trunks, which let the sky show as dashed lines.
 - `osd.rs`: the volume/brightness popup and the `media` IPC (see 5.8).
 - `notifications/popups.rs`: notification popups, top-right.
+- `eye_breaks.rs`: `EyeBreaks` (state file `eye-breaks`, off unless "on"),
+  the 20-20-20 cycle on `timer::Cycle`, the system panel's countdown text,
+  `restart_cycle()` (called by the lock screen's view) and the popup window,
+  bottom center above the osd (see 5.15).
+- `timer.rs`: the reusable timer parts, no services: `Countdown`, `Cycle`
+  (repeating phases, catches up after a gap), `remaining` ("14 min",
+  "45 s"), and `card` (a timer popup's card, the osd's look). Meant for
+  item 32 (timers, pomodoro) too. Tests: `timer::`.
 
 **Panels** (`src/panels/`)
 - `mod.rs`: the panel registry, `Panels` service, `panel()` wrapper for every
@@ -159,7 +167,8 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
   panel: CPU/memory/disk/temperature meters, network speed and battery on
   laptops; and
   under a "Settings" heading the accent swatches, the brightness slider and
-  the animations checkbox (`a`, `ui::checkbox`). Buttons for wallpaper
+  the animations (`a`), night light (`l`), idle (`i`) and eye breaks (`e`,
+  with "next in 14 min" beside it) checkboxes (`ui::checkbox`). Buttons for wallpaper
   (`w`), notifications (`n`), session (`s`).
 - `calendar.rs`: month + weather as two cards on one grid (see 5.5).
 - `wallpaper.rs`: the wallpaper strip along the bottom, with the desktop

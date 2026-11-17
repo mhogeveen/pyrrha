@@ -242,7 +242,7 @@ To add a host called `atlas`:
 - **Monitors and scaling:** panels have fixed sizes, chosen for a
   2560×1440 logical screen. 1920×1080 fits; a small laptop screen at a
   high scale can be cramped. Check with `mmsg get all-monitors`.
-- **Accent, animations, desktop design:** in the system panel and the
+- **Accent, animations, eye breaks, desktop design:** in the system panel and the
   wallpaper picker. They're kept in `~/.local/state/pyrrha/` (an older
   `~/.local/state/amane-shell/` is moved there once, at start).
 - **Binary name:** amane builds the shell as `amane-shell` and picks that

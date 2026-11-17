@@ -743,3 +743,16 @@ are kept, so references between the two files still work.
   once it showed while the launcher hid and crashed the shell (the layer
   surface protocol error). The reply goes out from that thread too, since
   `send` waits on the daemon. Tests: `ipc::`, `panels::launcher::`.
+
+### 53. Eye breaks
+- **Status:** done (2026-11-17): every 20 minutes a popup asks you to look at
+  something far away and counts down 20 seconds, then the 20 minutes start
+  again. Switched in the system panel ("Eye breaks", key `e`), with the time
+  to the next break beside the checkbox; off until switched on. Locking
+  restarts the 20 minutes. Nothing in the bar, no notification (24 a day
+  would bury the rest), shown over fullscreen windows too.
+- **How it fits:** the timing is in `src/timer.rs` (`Countdown`, `Cycle`,
+  `remaining`, `card`), kept free of eye-break wording so item 32 (timers,
+  pomodoro) can reuse it; `src/eye_breaks.rs` is the setting, the lock
+  reset and the popup window (see subsystems 5.15). Tests: `timer::`,
+  `eye_breaks::`.

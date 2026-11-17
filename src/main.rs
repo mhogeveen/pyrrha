@@ -2,7 +2,8 @@
  * pyrrha: a desktop shell for mango on the amane library. this starts the
  * parts that must run from launch, registers the ipc handlers (ipc.rs), and makes every
  * window once per monitor; the order of the windows is their stacking order,
- * bottom first: wallpaper, bar, backdrop, popups, every panel, the screenshot
+ * bottom first: wallpaper, bar, backdrop, popups (notifications, volume, eye
+ * breaks), every panel, the screenshot
  * menu (over the panels it can capture), the lock screen
  */
 
@@ -21,6 +22,7 @@ mod command;
 mod covers;
 mod desktop;
 mod doctor;
+mod eye_breaks;
 mod health;
 mod idle;
 mod ipc;
@@ -40,6 +42,7 @@ mod settings;
 mod state;
 mod system;
 mod theme;
+mod timer;
 mod usage;
 mod user_unit;
 mod vpn;
@@ -74,6 +77,9 @@ fn main() {
     // the volume popup follows every change from the start
     osd::start();
 
+    // the 20 minutes to the next eye break count from launch, when switched on
+    eye_breaks::start();
+
     // warns once about a hot cpu or gpu, a nearly full disk or a failed unit
     health::start();
 
@@ -91,6 +97,7 @@ fn main() {
         .window_per_monitor(panels::backdrop::view)
         .window_per_monitor(notifications::popups::view)
         .window_per_monitor(osd::view)
+        .window_per_monitor(eye_breaks::view)
         // under the panels, so a panel opened while recording a region covers the frame
         .window_per_monitor(recording::frame_view)
         .window_per_monitor(panels::launcher::view)

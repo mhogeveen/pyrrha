@@ -21,6 +21,7 @@ use amane::{
 };
 
 use crate::clock::Clock;
+use crate::eye_breaks;
 use crate::theme::{Theme, theme};
 use crate::wallpaper::Wallpaper;
 
@@ -48,6 +49,12 @@ const BOX_SIDES: f32 = 12.0;
 const GAP: f32 = 12.0;
 
 pub fn view(_monitor: &Monitor) -> LayerWindow {
+    /*
+     * away from the screen while locked: the next eye break comes 20 minutes
+     * after unlocking; only touches the cycle, safe in a view
+     */
+    eye_breaks::restart_cycle();
+
     let t = theme();
     let clock = Clock::read();
     let lock = Lock::read();

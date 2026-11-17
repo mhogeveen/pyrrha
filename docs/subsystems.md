@@ -217,3 +217,19 @@ only 5 °C under its limit and the disk under 88%, so a reading that hovers
 doesn't warn repeatedly. Something that can't be read this time keeps its
 warned state. The system panel's Temp row reads the same sensors every 2 s
 while open; its meter runs to the sensor's `tempN_crit` (else 100 °C).
+
+## 5.15 Eye breaks
+The system panel's "Eye breaks" checkbox (key `e`, `src/eye_breaks.rs`,
+item 53) runs the 20-20-20 habit: 20 minutes, then a popup "Rest your eyes"
+counting down 20 seconds, then 20 minutes again. Off unless switched on
+(state file `eye-breaks`). The cycle is a `timer::Cycle` (`src/timer.rs`,
+kept generic for item 32) ticked each second on the service's thread; the
+service is only written when what's shown changes: the panel's text beside
+the checkbox ("next in 14 min", each second in the last minute, "resting ·
+12 s") and the popup during a break. amane has no "is locked" flag, so the
+lock screen's view calls `eye_breaks::restart_cycle()` on every draw (it
+only exists while locked, and its clock redraws it each minute): the next
+break comes 20 minutes after unlocking. The popup window is like the osd's
+(5.8): always mapped, fixed size, click-through, drawn only during a break
+on the focused monitor, 96 px up so it never covers the osd. It shows over
+fullscreen windows too.
