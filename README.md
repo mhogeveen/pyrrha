@@ -87,7 +87,7 @@ This is how the shell is set up on `prometheus`; the host config is in
 4. **Link the config.** `~/.config/amane` must point at this folder:
    ```nix
    xdg.configFile."amane".source =
-     config.lib.file.mkOutOfStoreSymlink "${flakeDir}/config/amane/.config/amane";
+     config.lib.file.mkOutOfStoreSymlink "${config.home.homeDirectory}/git/pyrrha";
    ```
 
 5. **Start it with Mango and add the binds.** In `home/mango.nix`:

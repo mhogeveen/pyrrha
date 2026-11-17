@@ -16,8 +16,8 @@ anything. More detail, read when the task touches it:
   proposing anything), `DONE.md` (built, by number), `HISTORY.md` (why)
 
 ## Where things live
-- This folder is `~/.nixos/config/amane/.config/amane` (the user's NixOS
-  dotfiles; `config/` is a git submodule); `~/.config/amane` links here. Open
+- This folder is `~/git/pyrrha`, its own git repository; `~/.config/amane`
+  links here (home-manager, `~/.nixos/home/packages.nix`). Open
   files by the real path.
 - `amane compile` builds `src/` in `~/.cache/amane/project` (library in
   `~/.cache/amane/library`, overwritten each compile, so don't patch it).
