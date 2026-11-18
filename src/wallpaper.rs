@@ -17,12 +17,14 @@ use std::thread;
 
 use amane::{
     Color, Full, Image, Keyboard, Layer, LayerWindow, Monitor, Rectangle, Service, Size::Parent,
-    Zone,
+    Stack, Zone, children,
 };
 
 use crate::desktop;
+use crate::lock;
 use crate::settings::settings;
 use crate::state;
+use crate::wallpaper_copies::{self, Prepared};
 
 // the file in the state folder the choice is kept in: a path, or "none"
 const STATE: &str = "wallpaper";
@@ -56,9 +58,7 @@ pub struct Wallpaper {
 impl Service for Wallpaper {
     // a file of one line, quick enough for the first view that asks
     fn new() -> Self {
-        let current = fs::read_to_string(state::path(STATE))
-            .ok()
-            .and_then(|text| saved(&text));
+        let current = saved_choice();
 
         Self {
             shown: current.clone(),
@@ -76,6 +76,11 @@ impl Service for Wallpaper {
 impl Wallpaper {
     pub fn current(&self) -> Option<&Path> {
         self.current.as_deref()
+    }
+
+    // the one drawn now, a preview while the picker shows one
+    pub fn shown(&self) -> Option<&Path> {
+        self.shown.as_deref()
     }
 
     pub fn folder(&self) -> &Folder {
@@ -109,6 +114,9 @@ pub fn read_if_stale() {
         }
 
         READING.store(false, Ordering::Release);
+
+        // copies for pictures added since, and away with those of pictures removed
+        wallpaper_copies::refresh();
     });
 }
 
@@ -181,10 +189,15 @@ pub fn name(picture: &Path) -> String {
 }
 
 /*
- * the background of every monitor: the picture shown, decoded at no more than
- * twice the monitor's size in widget units (enough for a scale of 2, and a big
- * file costs no more memory than that), or see-through for mango's root_color,
- * with the desktop design drawn on either (src/desktop.rs)
+ * the background of every monitor: the picture shown, or see-through for
+ * mango's root_color, with the desktop design drawn on either (src/desktop.rs)
+ *
+ * the picture is its copy at the monitor's physical size (src/wallpaper_copies.rs),
+ * drawn 1:1 and, as it isn't a thumbnail to amane, freed once another one is
+ * shown. while that copy is still being made (the first time a picture is
+ * shown) the background stays see-through: decoding the original meanwhile
+ * would bring back the memory the copies save. without copies (no ffmpeg),
+ * amane shrinks the original to twice the widget size, as before
  *
  * the window is always there and only its fill and child change, so the
  * picker's preview doesn't show or hide a layer surface
@@ -196,13 +209,21 @@ pub fn view(monitor: &Monitor) -> LayerWindow {
 
     // the picture, or mango's root_color when there's none, with the desktop drawn on it
     let background = match shown {
-        Some(picture) => {
-            background.fill(Image::cover(picture).thumbnail(monitor.width * 2, monitor.height * 2))
-        }
+        Some(picture) => match wallpaper_copies::screen(&picture, &monitor.name) {
+            Prepared::Ready(file) => background.fill(Image::cover(file)),
+            Prepared::Waiting => background.fill(Color::TRANSPARENT),
+            Prepared::Unavailable => background
+                .fill(Image::cover(picture).thumbnail(monitor.width * 2, monitor.height * 2)),
+        },
         None => background.fill(Color::TRANSPARENT),
     };
 
-    let background = background.child(desktop::view(monitor));
+    // the lock screen's picture rides along at 0×0, so it's decoded before the screen locks
+    let background = background.child(
+        Stack::new(children![desktop::view(monitor), lock::warm_up()])
+            .width(Parent)
+            .height(Parent),
+    );
 
     LayerWindow::new()
         .width(Full)
@@ -213,6 +234,13 @@ pub fn view(monitor: &Monitor) -> LayerWindow {
         .namespace("amane-wallpaper")
         .child(background)
         .click_through()
+}
+
+// the choice kept in the state file, without the service; for the copies' first look
+pub fn saved_choice() -> Option<PathBuf> {
+    fs::read_to_string(state::path(STATE))
+        .ok()
+        .and_then(|text| saved(&text))
 }
 
 // a saved choice; a picture that's gone since counts as none
@@ -229,7 +257,7 @@ fn saved(text: &str) -> Option<PathBuf> {
 }
 
 // the pictures in a folder by name, None when the folder can't be read
-fn pictures(folder: &Path) -> Option<Vec<PathBuf>> {
+pub fn pictures(folder: &Path) -> Option<Vec<PathBuf>> {
     let entries = fs::read_dir(folder).ok()?;
 
     let mut pictures: Vec<PathBuf> = entries

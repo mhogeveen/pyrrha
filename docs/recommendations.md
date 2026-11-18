@@ -248,8 +248,10 @@ up as issue texts.
   so library fixes can't be tried locally.
 - **`ScrollArea` only scrolls up and down**, so the wallpaper strip slides its
   window along with the selection instead.
-- **`Monitor` has no scale factor**, so the wallpaper is decoded at twice the
-  monitor's size in widget units, a guess that covers scales up to 2.
+- **`Monitor` has no scale factor**, so the shell can't size a picture to the
+  monitor's pixels; it asks `mmsg get all-monitors` instead (item 54), and
+  without that falls back to twice the widget size, a guess that covers scales
+  up to 2.
 - **No colour glyphs.** Letters are rendered from outlines only
   (`Render::new(&[Source::Outline])`, `Format::Alpha` into an `R8Unorm` atlas,
   `graphics/letter.rs`), so bitmap (CBDT) and COLR fonts draw nothing. For
@@ -260,5 +262,40 @@ up as issue texts.
   glyphs in an RGBA atlas; at minimum, skip fonts without outlines in the
   fallback search. Blocks item 30.
 - **The image decoder reads PNG and JPEG only**, not WebP.
-- **Every image asked for starts its own decode thread**, with no limit: many
-  full-size pictures requested at once all decode in parallel.
+- **Image memory** (measured 2026-11-18: amane-shell's peak was 605 MB on a
+  machine with 6.9 GB, against ~110 MB normally).
+  - **Mechanism** (all in `graphics/image.rs` unless named):
+    - `load()` starts a `thread::spawn` per image asked for, with no limit,
+      so opening the wallpaper picker decoded ten pictures at once.
+    - `decode()` always decodes the **full-size** picture (`read()`) before
+      `shrink::to_cover` makes the thumbnail, so `.thumbnail(w, h)` saves
+      memory afterwards but not while decoding.
+    - `decode_png` holds the picture twice: the decoder's buffer, then
+      `expand()`'s RGBA copy (`to_vec()` even when it's RGBA already),
+      about 8 bytes a pixel at the peak (7 for RGB). rei.png (6400×3600)
+      alone is ≈184 MB while decoding; the thirteen wallpapers here add up
+      to ≈600 MB, which matches the measured peak.
+    - `forget()` frees only images without a thumbnail size ("small copies
+      stay"), whatever the size: a background at `.thumbnail(5120, 2880)`
+      stays until exit, so every wallpaper previewed in the picker stayed
+      (up to 59 MB each).
+    - An image decoded but never drawn is never freed either:
+      `forget_unshown` (`graphics/gpu/forget.rs`) only sees images a window
+      drew. That covers `Image::loaded()`, which decodes at full size, and
+      any image a view stopped asking for before its decode finished.
+    - There's no public way to ask whether a *thumbnail* is ready
+      (`Image::loaded` asks for the full size), so a view can't load
+      pictures one after another itself.
+  - **Upstream fix:**
+    - decode on a small pool (one or two threads) fed by a queue;
+    - PNG straight to RGBA (`Transformations::normalize_to_color8() |
+      Transformations::ALPHA`), moving the buffer instead of copying it;
+    - free thumbnails above a size (say 1 Mpx) when no window shows them,
+      like full-size images;
+    - drop entries nobody drew after a while;
+    - shrink JPEGs while decoding (zune-jpeg can't; a decoder with DCT
+      scaling can);
+    - `Image::loaded` for a thumbnail size (or `Image::ready(&image)`).
+  - **Worked around** by item 54: ffmpeg makes ready-sized copies one at a
+    time, and the views only ever give amane those. Peak with the picker
+    and all wallpapers previewed: 191 MB.

@@ -40,6 +40,9 @@ pub struct Settings {
     // screen recordings (wf-recorder's flags)
     pub recorder: &'static str,
 
+    // makes the wallpaper copies (src/wallpaper_copies.rs; ffmpeg's flags, its input and output are added)
+    pub resizer: &'static str,
+
     // the user units the system panel's switches start and stop
     pub idle_unit: &'static str,
     pub night_light_unit: &'static str,
@@ -90,6 +93,7 @@ impl Default for Settings {
             terminal: "foot",
             annotator: "satty",
             recorder: "wf-recorder",
+            resizer: "ffmpeg",
             idle_unit: "hypridle.service",
             night_light_unit: "wlsunset.service",
             render_node: RenderNode::Auto,

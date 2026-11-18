@@ -34,6 +34,7 @@ use super::{Panels, WALLPAPER, panel};
 use crate::desktop::{self, Design, Desktop, Moment, Page};
 use crate::theme::Theme;
 use crate::wallpaper::{self, Folder, Wallpaper};
+use crate::wallpaper_copies::{self, Prepared};
 
 // a thumbnail is 16:9 like the screen, with its name under it
 const TILE_WIDTH: f32 = 240.0;
@@ -51,8 +52,8 @@ const CHAR_WIDTH: f32 = NAME_SIZE * 0.6;
 const LABEL_CHARS: usize = (TILE_WIDTH / CHAR_WIDTH) as usize;
 const IN_USE: &str = " · in use";
 
-// thumbnails are decoded at twice their size, sharp on a scaled screen
-const THUMBNAIL: (u32, u32) = (TILE_WIDTH as u32 * 2, TILE_HEIGHT as u32 * 2);
+// thumbnails are decoded at twice their size, sharp on a scaled screen; also the tile copies' size
+pub const THUMBNAIL: (u32, u32) = (TILE_WIDTH as u32 * 2, TILE_HEIGHT as u32 * 2);
 
 const HEADER_GAP: f32 = 8.0;
 const EDGE: i32 = 8;
@@ -563,12 +564,26 @@ fn tile(t: &Theme, item: Option<PathBuf>, mark: Mark, in_use: bool) -> Column {
         None => String::from("None"),
     };
 
-    // the picture fills the tile once decoded, with a plain tile under it until then
+    /*
+     * the picture fills the tile once decoded, with a plain tile under it until
+     * then. it's the tile copy (src/wallpaper_copies.rs): decoding the originals
+     * here started one full-size decode per tile at once. the plain tile stays
+     * while the copy is made; without copies (no ffmpeg), the original as before
+     */
     let picture = match &item {
-        Some(picture) => Rectangle::new()
-            .width(Parent)
-            .height(Parent)
-            .fill(Image::cover(picture.clone()).thumbnail(THUMBNAIL.0, THUMBNAIL.1)),
+        Some(picture) => {
+            let area = Rectangle::new().width(Parent).height(Parent);
+
+            match wallpaper_copies::tile(picture) {
+                Prepared::Ready(file) => {
+                    area.fill(Image::cover(file).thumbnail(THUMBNAIL.0, THUMBNAIL.1))
+                }
+                Prepared::Waiting => area,
+                Prepared::Unavailable => {
+                    area.fill(Image::cover(picture.clone()).thumbnail(THUMBNAIL.0, THUMBNAIL.1))
+                }
+            }
+        }
         None => Rectangle::new()
             .width(Parent)
             .height(Parent)

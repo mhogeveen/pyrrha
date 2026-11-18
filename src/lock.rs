@@ -24,6 +24,7 @@ use crate::clock::Clock;
 use crate::eye_breaks;
 use crate::theme::{Theme, theme};
 use crate::wallpaper::Wallpaper;
+use crate::wallpaper_copies::{self, Prepared};
 
 // the wallpaper behind the lock screen: a small copy, blurred once, then darkened
 const BLURRED: (u32, u32) = (320, 180);
@@ -151,11 +152,16 @@ fn background(t: &Theme) -> Vec<Box<dyn Widget>> {
         return vec![Box::new(plain)];
     };
 
-    let blurred = Rectangle::new().width(Parent).height(Parent).fill(
-        Image::cover(picture)
-            .thumbnail(BLURRED.0, BLURRED.1)
-            .blurred(BLUR),
-    );
+    // shrunk from the picker's tile copy when there is one, so the first lock doesn't decode the original
+    let source = match wallpaper_copies::tile(&picture) {
+        Prepared::Ready(file) => file,
+        Prepared::Waiting | Prepared::Unavailable => picture,
+    };
+
+    let blurred = Rectangle::new()
+        .width(Parent)
+        .height(Parent)
+        .fill(blurred(source));
 
     let dark = Rectangle::new()
         .width(Parent)
@@ -164,4 +170,32 @@ fn background(t: &Theme) -> Vec<Box<dyn Widget>> {
         .opacity(DARKEN);
 
     vec![Box::new(plain), Box::new(blurred), Box::new(dark)]
+}
+
+// the lock screen's picture; warm_up must ask for exactly this, or amane decodes it again
+fn blurred(source: PathBuf) -> Image {
+    Image::cover(source)
+        .thumbnail(BLURRED.0, BLURRED.1)
+        .blurred(BLUR)
+}
+
+/*
+ * an empty rectangle filled with the lock screen's picture, drawn on the
+ * wallpaper's window (src/wallpaper.rs): amane starts decoding a fill when it
+ * draws the rectangle, whatever its size, and keeps the blurred copy, so the
+ * picture is ready when the screen locks instead of popping in after. at 0×0
+ * nothing reaches the gpu. only once the tile copy is there: asking for the
+ * original would decode it at full size, what the copies avoid
+ */
+pub fn warm_up() -> Rectangle {
+    let empty = Rectangle::new().width(0.0).height(0.0);
+
+    let Some(picture) = Wallpaper::read().current().map(PathBuf::from) else {
+        return empty;
+    };
+
+    match wallpaper_copies::tile(&picture) {
+        Prepared::Ready(file) => empty.fill(blurred(file)),
+        Prepared::Waiting | Prepared::Unavailable => empty,
+    }
 }

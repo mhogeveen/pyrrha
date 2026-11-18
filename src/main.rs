@@ -47,6 +47,7 @@ mod usage;
 mod user_unit;
 mod vpn;
 mod wallpaper;
+mod wallpaper_copies;
 mod weather;
 
 fn main() {

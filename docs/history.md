@@ -387,6 +387,21 @@ each finished recommendation by number; `../AGENTS.md` and the other files in
    Then a bar dot for "off" in a new `theme.warning` (#f4a21c), the user's
    choice over the accent, beside the privacy dot.
 
+## Session: wallpaper memory (2026-11-18)
+
+1. **Item 54.** Looking for what on the machine was worth slimming down,
+   amane-shell turned out to have peaked at 605 MB (`VmHWM`) against ~110 MB
+   normally. Reading amane's image code explained it: a decode thread per
+   picture with no limit, full-size decodes before every thumbnail, PNGs held
+   twice, and thumbnails never freed however big. The library fixes belong
+   upstream (written up in recommendations.md, "Image memory"), so the user
+   chose a fix in the shell only: ready-sized copies. ffmpeg over vips (the
+   user's choice), made outside the shell's process so their memory goes
+   away with ffmpeg. The background copy is at the monitor's physical pixels
+   and lossless, by request: it shouldn't look any worse than before. While a
+   copy is made the background stays see-through rather than decoding the
+   original, since an image amane decoded but never drew is never freed.
+
 ## Habits worth keeping
 
 - Verify before claiming: check the code, the running shell (`pgrep`, its

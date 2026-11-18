@@ -9,10 +9,23 @@ them written up for upstream.
 - **D-Bus:** `Argument` can't build structs (blocks the polkit agent, item 10)
   and `Method` can't send error replies. Incoming structs arrive as
   `Value::List`.
-- **Images:** PNG and JPEG only (detected by first bytes), each request decodes
-  on its own thread with no limit; `Image::thumbnail(w, h)` keeps only a small
-  copy (cached forever), `.blurred(r)` blurs once; full-size images are freed
-  when no window shows them.
+- **Images:** PNG and JPEG only (detected by first bytes). Memory is the catch
+  (details and numbers under "Image memory" in `recommendations.md`):
+  - each request decodes on its own thread, with no limit;
+  - a picture is always decoded at **full size** first, a PNG held twice
+    over (~8 bytes a pixel), and `.thumbnail(w, h)` only shrinks it after;
+  - a thumbnail is kept until the shell exits, **whatever its size**;
+    `.blurred(r)` blurs it once;
+  - a full-size image is freed when no window draws it anymore, but one that
+    was decoded and never drawn is never freed (`Image::loaded()`, which
+    decodes at full size, or a view that moved on before the decode
+    finished);
+  - nothing says whether a thumbnail is ready.
+
+  So never hand amane a big original: wallpapers go through ready-sized
+  copies (`src/wallpaper_copies.rs`, item 54). Album art and clipboard
+  images still go to amane directly: album art is small, and a clipboard
+  screenshot costs one full-size decode while the clipboard panel is open.
 - **Widgets:** `ScrollArea` scrolls vertically only and can't be scrolled from
   code (lists window their rows instead). Calling `.height(x)` on a value
   returned as a built `Rectangle` can resolve to the `Widget` getter; pass

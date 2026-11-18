@@ -31,6 +31,12 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
   password box; the wallpaper blurred and darkened behind it.
 - `wallpaper.rs`: the `Wallpaper` service and the background-layer window per
   monitor (see 5.6).
+- `wallpaper_copies.rs`: the `Copies` service: ready-sized copies of the
+  wallpapers made with ffmpeg in `~/.cache/pyrrha/wallpapers` (a picker tile,
+  and one per monitor at its physical size), so amane never decodes a
+  wallpaper at full size (item 54, see 5.6). Its `listen()` is the worker:
+  one ffmpeg at a time, the shown wallpaper first; `refresh()` asks for
+  another pass. Views ask `screen`/`tile`, which answer `Prepared`.
 - `desktop.rs`: the page drawn on that window, over the picture or None, in
   one of several designs: `Design` (list and names), the `Desktop` service
   (`current`/`shown`, kept in the `desktop` state file), `Moment` (time, date,

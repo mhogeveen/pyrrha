@@ -32,6 +32,26 @@ pub fn path(name: &str) -> PathBuf {
     state_dir().join(FOLDER).join(name)
 }
 
+// $XDG_CACHE_HOME, or ~/.cache when it isn't set to an absolute path
+fn cache_dir() -> PathBuf {
+    env::var_os("XDG_CACHE_HOME")
+        .map(PathBuf::from)
+        .filter(|path| path.is_absolute())
+        .unwrap_or_else(|| {
+            let home = env::var_os("HOME").map(PathBuf::from).unwrap_or_default();
+
+            home.join(".cache")
+        })
+}
+
+/*
+ * the shell's own file or folder in the cache folder: $XDG_CACHE_HOME/pyrrha/<name>,
+ * for what can be made again, like the wallpaper copies
+ */
+pub fn cache_path(name: &str) -> PathBuf {
+    cache_dir().join(FOLDER).join(name)
+}
+
 /*
  * the session's runtime folder ($XDG_RUNTIME_DIR, in memory, emptied at
  * logout); None when it isn't set to an absolute path, then nothing is kept there

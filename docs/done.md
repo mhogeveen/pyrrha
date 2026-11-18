@@ -756,3 +756,30 @@ are kept, so references between the two files still work.
   pomodoro) can reuse it; `src/eye_breaks.rs` is the setting, the lock
   reset and the popup window (see subsystems 5.15). Tests: `timer::`,
   `eye_breaks::`.
+
+### 54. Wallpaper copies
+- **Status:** done (2026-11-18): amane-shell peaked at 605 MB (normally
+  ~110 MB) on a 6.9 GB machine that was already swapping. Opening the
+  wallpaper picker had amane decode every visible wallpaper at full size, all
+  at once, and each previewed wallpaper stayed in memory until a restart
+  (amane's causes in `amane.md` and "Image memory" in recommendations.md).
+  Now ffmpeg makes ready-sized copies in `~/.cache/pyrrha/wallpapers`, one at
+  a time at the lowest priority: a 480×270 tile per wallpaper, and a
+  background at the monitor's physical size (3840×2160 here; lanczos,
+  lossless PNG, drawn 1:1, never scaled up). The views only give amane those.
+  Measured with the picker opened and all 13 wallpapers previewed: peak
+  191 MB, back to ~119 MB after cancelling. Making the copies the first time
+  (about 30 s for this folder) didn't raise the shell's peak at all; ffmpeg
+  peaks at ~190 MB in its own process for the largest file and frees it on
+  exit.
+- **How it fits:** `src/wallpaper_copies.rs`, the `Copies` service, whose
+  `listen()` thread does the work (subsystems 5.6). Read by
+  `wallpaper::view`, the picker's `tile` and the lock screen's blur. It answers
+  `Prepared::Ready`, `Waiting` (nothing drawn, never the original) or
+  `Unavailable` (the original, as before). New `resizer` setting (`"ffmpeg"`)
+  and a doctor line; `state::cache_path`. The lock screen's blur popped in a
+  moment after locking (decoded on first use), so the background window
+  decodes it ahead with `lock::warm_up()`, an empty rectangle with the same
+  fill. ffmpeg runs without the shell's
+  `LD_LIBRARY_PATH`, like wf-recorder (item 34). Tests: `wallpaper_copies::`.
+- **Outside the shell:** `ffmpeg` in `~/.nixos/home/packages.nix`.

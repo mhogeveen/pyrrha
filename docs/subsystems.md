@@ -67,9 +67,9 @@ included.
 
 ## 5.6 Wallpaper
 `wallpaper.rs`: `current` (kept) and `shown` (previewed) as `Option<PathBuf>`.
-The background window per monitor fills with `Image::cover(path)
-.thumbnail(monitor.width*2, monitor.height*2)` (bounded memory, enough for
-scale 2), or `Color::TRANSPARENT` for None so mango's `root_color` (equal to
+The background window per monitor fills with the picture's copy at the
+monitor's physical size (`wallpaper_copies::screen`, below) as a plain
+`Image::cover(copy)`, or `Color::TRANSPARENT` for None so mango's `root_color` (equal to
 `bg_deep`) shows, with `desktop::view` drawn on it in the design shown (items
 38, 39): it reads `Clock`, so it redraws once a minute, and only for None (a
 picture never redraws). Text under about 0.15 × the monitor height, and no
@@ -83,6 +83,40 @@ list (moved, deleted, or the folder still being read), nothing is selected and
 Enter only closes; `r` starts over from the one in use, preview included.
 Selected tile: 2 px accent border; in use: " · in use" after its name (names
 shortened to fit; left-aligned).
+
+**Copies** (`wallpaper_copies.rs`, item 54). amane decodes every picture at
+full size before shrinking it, one thread per picture at once, and keeps any
+`.thumbnail()` until the shell exits (`docs/amane.md`): the picker used to
+peak at 605 MB and every preview stayed in memory. So the views never give
+amane an original. The `Copies` service's `listen()` thread runs ffmpeg
+(setting `resizer`) on one file at a time (`nice -n 19`, one thread, without
+the shell's `LD_LIBRARY_PATH`) into `~/.cache/pyrrha/wallpapers`:
+- a **tile** at the picker's `THUMBNAIL` (480×270, cropped), also the lock
+  screen's source for its blur;
+- a **background** per monitor size: mango's logical size × scale from
+  `mmsg get all-monitors` (3840×2160 here), lanczos to just cover it, lossless
+  PNG, drawn 1:1. A picture no bigger than that both ways is used as it is,
+  never scaled up (the same rule amane shrinks by).
+
+Copies are named `<name>-<stamp>-<w>x<h>.png`, the stamp mixing the path,
+length and change time, so an edited picture gets new ones; a pass removes
+PNGs no picture needs (not when mango gave no sizes) and writes through a
+`.part.png`. Passes run at start and after each folder read
+(`wallpaper::read_if_stale` calls `refresh`); the shown wallpaper's
+background goes first, then the tiles. `Copies::new()` looks up the saved
+wallpaper's copy at once (from the state file, not the `Wallpaper` service),
+so a start draws it on the first frame. The background window also carries
+`lock::warm_up()`, a 0×0 rectangle with the lock screen's exact blurred fill:
+amane asks for a fill's decode whenever it draws the rectangle, whatever its
+size (the renderer only skips the empty area after), and keeps the blurred
+copy, so the lock screen's picture is ready instead of popping in. It waits
+for the tile copy, never decoding the original. Views get `Prepared`: `Ready(file)`;
+`Waiting` (being made: the background stays see-through and the tile plain,
+since decoding the original meanwhile is what the copies avoid, and an image
+amane decodes but never draws is never freed); `Unavailable` (no ffmpeg, an
+unknown monitor, a file ffmpeg can't read): the original as before, with
+`.thumbnail(monitor×2)`. Measured with the picker opened and all 13 previewed:
+peak 191 MB (was 605), back to ~119 MB after (start 110).
 
 A "Desktops" card above the strip shows the `Design`s as live thumbnails
 (`desktop::page` at tile size, on the dark page, not over the wallpaper), as many as fit

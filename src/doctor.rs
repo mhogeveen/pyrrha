@@ -143,6 +143,7 @@ fn checks() -> Vec<Finding> {
         (settings.terminal, "terminal", "launcher's >>command"),
         (settings.annotator, "annotator", "screenshot annotation"),
         (settings.recorder, "recorder", "screen recording"),
+        (settings.resizer, "resizer", "wallpaper copies"),
     ];
 
     for (value, setting, feature) in configured {

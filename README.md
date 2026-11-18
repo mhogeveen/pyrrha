@@ -63,6 +63,7 @@ error or stays empty.
 | Clipboard history | `cliphist`, `wl-clipboard` (`wl-copy`, `wl-paste`) |
 | Screenshots | `grim`, `slurp`, and `satty` to annotate |
 | Screen recording | `wf-recorder`; VA-API drivers for GPU encoding (falls back to software `libx264`) |
+| Wallpapers without full-size decodes | `ffmpeg`: makes the picker tiles and screen-sized backgrounds in `~/.cache/pyrrha/wallpapers`; without it amane decodes every wallpaper at full size, as before (much more memory) |
 | Screen sharing in the privacy dot | `xdg-desktop-portal-wlr` |
 | Network panel | NetworkManager |
 | Bluetooth panel | BlueZ (`bluetoothd`), `rfkill` |
@@ -105,7 +106,7 @@ This is how the shell is set up on `prometheus`; the host config is in
    want the same.
 
 3. **User packages** (home-manager): `rustup`, `cliphist`, `libnotify`,
-   `grim`, `slurp`, `wf-recorder`, plus `programs.foot`, satty
+   `grim`, `slurp`, `wf-recorder`, `ffmpeg`, plus `programs.foot`, satty
    (`home/satty.nix`), hypridle (`home/hypridle.nix`) and wlsunset
    (`home/wlsunset.nix`) if you want those features.
 
@@ -166,7 +167,7 @@ It runs instead of the shell, so it works before the shell has ever started
 and doesn't disturb a running one. It changes nothing. It checks:
 
 - the programs in the dependency tables, including the terminal, annotator
-  and recorder from this host's settings
+  recorder and resizer from this host's settings
 - the idle and night-light units, the GPU render node and the font
 - brightness access (a backlight, or `/dev/i2c-*`)
 - that no other notification daemon holds the name
@@ -199,6 +200,7 @@ The values that differ between machines are compiled in, so a mistake fails
 | `terminal` | `"foot"` | Runs the launcher's `>>command`; words after the program come before `sh -c ...`, so `"alacritty -e"` works |
 | `annotator` | `"satty"` | Gets the screenshot on stdin with `--filename -` |
 | `recorder` | `"wf-recorder"` | Screen recordings (wf-recorder's flags) |
+| `resizer` | `"ffmpeg"` | Makes the wallpaper copies (ffmpeg's flags; the input, filter and output are added) |
 | `idle_unit` | `"hypridle.service"` | User unit behind the system panel's Idle switch |
 | `night_light_unit` | `"wlsunset.service"` | User unit behind the Night light switch |
 | `render_node` | `RenderNode::Auto` | GPU for VA-API encoding: `Auto` (lowest `/dev/dri/renderD*`), `Path("/dev/dri/renderD129")`, or `None` for software |
