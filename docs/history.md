@@ -422,6 +422,17 @@ each finished recommendation by number; `../AGENTS.md` and the other files in
    relative path can't stay; docs corrected.
 4. The low-priority findings went into item 55.
 
+## Session: dismissable eye breaks (2026-11-18)
+
+1. **Item 53, skipping a break.** The popup couldn't be sent away (the
+   window let every click through, took no keys). The user chose a click on
+   the card plus an ipc command, `eye-breaks skip`, and no mango key; a skip
+   restarts the 20 minutes from the dismissal, like locking. The click works
+   through the window's input region, set to the card alone while it shows,
+   so the layer surface never shows, hides or resizes. Checked live with the
+   work phase at 15 s: the ipc and a virtual pointer click (wlrctl) each took
+   the card away, a click beside it didn't.
+
 ## Habits worth keeping
 
 - Verify before claiming: check the code, the running shell (`pgrep`, its

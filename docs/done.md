@@ -756,6 +756,10 @@ are kept, so references between the two files still work.
   pomodoro) can reuse it; `src/eye_breaks.rs` is the setting, the lock
   reset and the popup window (see subsystems 5.15). Tests: `timer::`,
   `eye_breaks::`.
+- **Dismissable (2026-11-18):** a click on the card or `amane ipc call
+  eye-breaks skip` ends the break at once; the next comes 20 minutes later,
+  as after locking. Only the card takes the pointer (the window's input
+  region), the rest of the window still lets clicks through. No mango key.
 
 ### 54. Wallpaper copies
 - **Status:** done (2026-11-18): amane-shell peaked at 605 MB (normally

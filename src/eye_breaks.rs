@@ -11,8 +11,11 @@
  * break comes 20 minutes after unlocking rather than right away. a suspend
  * locks first, and the clock the cycle runs on stands still while asleep
  *
- * the popup window is always mapped, never changes size and lets every click
- * through; it only draws while a break is on, like the volume popup (osd.rs)
+ * the popup window is always mapped and never changes size; it only draws
+ * while a break is on, like the volume popup (osd.rs). clicks go through it
+ * except on the card while it shows: a click there, or `eye-breaks skip`
+ * over ipc, ends the break, and the next comes 20 minutes later (as after
+ * locking). only the input region changes, never the layer surface
  */
 
 use std::fs;
@@ -21,8 +24,8 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use amane::{
-    Align::Center, Color, Full, Keyboard, Layer, LayerWindow, Margin, Monitor, Rectangle, Service,
-    Size::Parent, Vertical,
+    Align::Center, Color, Cursor::Pointer, Full, InputArea, Keyboard, Layer, LayerWindow, Margin,
+    Monitor, Rectangle, Service, Size::Parent, Vertical,
 };
 
 use crate::panels;
@@ -191,6 +194,11 @@ fn tick(enabled: bool, now: Instant) -> (Option<Rest>, String) {
 
     cycle.advance(now);
 
+    shown(cycle, now)
+}
+
+// what the cycle as it stands shows: the popup during a break, the panel's line
+fn shown(cycle: &Cycle<Phase>, now: Instant) -> (Option<Rest>, String) {
     let phase = cycle.phase();
     let left = cycle.left(now);
 
@@ -200,6 +208,66 @@ fn tick(enabled: bool, now: Instant) -> (Option<Rest>, String) {
     });
 
     (resting, countdown(phase, left))
+}
+
+/*
+ * ends a break that's on and starts the 20 minutes again from now; gives
+ * whether there was one. during work nothing changes
+ */
+fn skip_rest(cycle: &mut Cycle<Phase>, now: Instant) -> bool {
+    cycle.advance(now);
+
+    if cycle.phase() != Phase::Rest {
+        return false;
+    }
+
+    cycle.restart(now);
+
+    true
+}
+
+/*
+ * from a click on the card or the ipc, never inside a view (it writes the
+ * service): ends the break on screen and takes the popup away now rather than
+ * on the next tick. false, touching nothing, while off or with no break on
+ */
+pub fn skip() -> bool {
+    let now = Instant::now();
+
+    // the cycle's lock is let go before the service is written
+    let (resting, countdown) = {
+        let mut cycle = CYCLE.lock().unwrap_or_else(PoisonError::into_inner);
+
+        let Some(cycle) = cycle.as_mut() else {
+            return false;
+        };
+
+        if !skip_rest(cycle, now) {
+            return false;
+        }
+
+        shown(cycle, now)
+    };
+
+    let mut breaks = EyeBreaks::write();
+
+    breaks.resting = resting;
+    breaks.countdown = countdown;
+
+    true
+}
+
+pub fn ipc(arguments: &[String]) -> String {
+    match arguments {
+        [action] if action == "skip" => {
+            if skip() {
+                "skipped".to_string()
+            } else {
+                "no break on".to_string()
+            }
+        }
+        _ => "usage: eye-breaks skip".to_string(),
+    }
 }
 
 /*
@@ -238,19 +306,32 @@ pub fn view(monitor: &Monitor) -> LayerWindow {
 
     let resting = EyeBreaks::read().resting.clone();
 
-    let content = match resting {
-        Some(rest) if panels::is_focused(monitor) => timer::card(
-            &t,
-            ICON_EYE,
-            "Rest your eyes",
-            "Look at something far away",
-            &rest.left,
-            rest.fraction,
+    // only the card takes the pointer, and only while it shows
+    let (content, areas) = match resting {
+        Some(rest) if panels::is_focused(monitor) => {
+            let card = timer::card(
+                &t,
+                ICON_EYE,
+                "Rest your eyes",
+                "Look at something far away",
+                &rest.left,
+                rest.fraction,
+            )
+            .cursor(Pointer)
+            // writes the service, which a click handler may
+            .on_click(|_| {
+                skip();
+            });
+
+            (card, vec![card_area(monitor.width)])
+        }
+        _ => (
+            Rectangle::new()
+                .width(Parent)
+                .height(Parent)
+                .fill(Color::TRANSPARENT),
+            Vec::new(),
         ),
-        _ => Rectangle::new()
-            .width(Parent)
-            .height(Parent)
-            .fill(Color::TRANSPARENT),
     };
 
     LayerWindow::new()
@@ -273,7 +354,19 @@ pub fn view(monitor: &Monitor) -> LayerWindow {
                 .align_child(Center, Center)
                 .child(content),
         )
-        .click_through()
+        .input_region(areas)
+}
+
+// the card, centered in the full-width window, in the window's own units
+fn card_area(monitor_width: u32) -> InputArea {
+    let card_width = timer::CARD_WIDTH as u32;
+
+    InputArea {
+        x: (monitor_width.saturating_sub(card_width) / 2) as i32,
+        y: 0,
+        width: card_width as i32,
+        height: timer::CARD_HEIGHT.ceil() as i32,
+    }
 }
 
 #[cfg(test)]
@@ -304,5 +397,40 @@ mod tests {
             countdown(Phase::Rest, Duration::from_secs(12)),
             "resting · 12 s"
         );
+    }
+
+    const SECOND: Duration = Duration::from_secs(1);
+
+    #[test]
+    fn skipping_a_break_starts_the_20_minutes_again() {
+        let start = Instant::now();
+        let mut cycle = Cycle::new(&PHASES, start);
+        let skipped = start + WORK + 5 * SECOND;
+
+        assert!(skip_rest(&mut cycle, skipped));
+        assert_eq!(cycle.phase(), Phase::Work);
+        assert_eq!(cycle.left(skipped), WORK);
+        assert_eq!(shown(&cycle, skipped).0, None);
+    }
+
+    #[test]
+    fn skipping_during_work_changes_nothing() {
+        let start = Instant::now();
+        let mut cycle = Cycle::new(&PHASES, start);
+        let working = start + 10 * SECOND;
+
+        assert!(!skip_rest(&mut cycle, working));
+        assert_eq!(cycle.phase(), Phase::Work);
+        assert_eq!(cycle.left(working), WORK - 10 * SECOND);
+    }
+
+    #[test]
+    fn the_card_takes_clicks_in_the_middle() {
+        let area = card_area(2560);
+
+        assert_eq!(area.x, 1100);
+        assert_eq!(area.y, 0);
+        assert_eq!(area.width, 360);
+        assert_eq!(area.height, timer::CARD_HEIGHT.ceil() as i32);
     }
 }

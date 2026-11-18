@@ -39,10 +39,10 @@ toggles click-through, and a click on it closes all panels. Corner panels use
 Showing, hiding or resizing a layer surface while another changes makes mango
 reconfigure surfaces; a configure acked after wlroots dropped it kills the
 shell (`Protocol error 0 on zwlr_layer_surface_v1`). So: panels have fixed
-sizes; popups (notifications, osd) are always mapped, never resize, are
-click-through outside their content (`input_region`/`click_through`), and
-only draw while showing; the wallpaper preview only changes a fill. Don't
-introduce windows that show/hide quickly.
+sizes; popups (notifications, osd, eye breaks) are always mapped, never
+resize, are click-through outside their content
+(`input_region`/`click_through`), and only draw while showing; the wallpaper
+preview only changes a fill. Don't introduce windows that show/hide quickly.
 
 ## 5.4 Notifications
 amane's `Notifications` service is the daemon. `popups.rs` shows cards
@@ -268,6 +268,11 @@ the checkbox ("next in 14 min", each second in the last minute, "resting ·
 lock screen's view calls `eye_breaks::restart_cycle()` on every draw (it
 only exists while locked, and its clock redraws it each minute): the next
 break comes 20 minutes after unlocking. The popup window is like the osd's
-(5.8): always mapped, fixed size, click-through, drawn only during a break
-on the focused monitor, 96 px up so it never covers the osd. It shows over
-fullscreen windows too.
+(5.8): always mapped, fixed size, drawn only during a break on the focused
+monitor, 96 px up so it never covers the osd. It shows over fullscreen
+windows too. Clicks go through it except on the card while it shows (its
+input region is the card alone, `card_area`, else empty): a click on the
+card or `amane ipc call eye-breaks skip` ends the break (`skip()`, which
+restarts the cycle and writes the service after letting go of the cycle's
+lock), and the next comes 20 minutes later; with no break on, the ipc
+replies `no break on`.

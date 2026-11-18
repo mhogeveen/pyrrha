@@ -38,7 +38,7 @@ anything. More detail, read when the task touches it:
 ## Workflow
 - Build `amane compile` (zero warnings, fix every one); format
   `rustfmt --edition 2024 src/main.rs`; test `./test.sh` (`./test.sh system::`
-  filters; 271 tests), add tests for pure logic.
+  filters; 274 tests), add tests for pure logic.
 - Name: the shell is Pyrrha, but the binary and process stay `amane-shell`
   (amane generates the Cargo package and picks that name); state folders are
   `pyrrha/`, moved from `amane-shell/` once at start (`state::migrate`).
@@ -53,7 +53,8 @@ anything. More detail, read when the task touches it:
   `close-all`, `list`; `lock`; `accent [next|<name>]`;
   `weather [refresh|location <lat> <lon> <name>]`; `media play-pause|next|previous`;
   `brightness up|down`; `record stop|menu` (menu: stops a recording, else
-  toggles the screenshot menu). All listed in `src/ipc.rs` (`COMMANDS`), which
+  toggles the screenshot menu); `eye-breaks skip` (ends the break on
+  screen, the next in 20 minutes). All listed in `src/ipc.rs` (`COMMANDS`), which
   registers them; the launcher's `!` calls them too (`!accent next`).
 - Screenshots: `grim -g "x,y wxh"` takes logical coordinates (amane's widget
   units); the png comes out at physical size (× scale). On the AOC U27B3AF

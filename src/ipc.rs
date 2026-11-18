@@ -6,6 +6,7 @@
  */
 
 use crate::brightness;
+use crate::eye_breaks;
 use crate::osd;
 use crate::panels;
 use crate::recording;
@@ -94,6 +95,14 @@ pub static COMMANDS: &[IpcCommand] = &[
         options: record_options,
         notify: false,
     },
+    IpcCommand {
+        name: "eye-breaks",
+        handler: eye_breaks::ipc,
+        arguments: "skip",
+        description: "Skip the eye break on screen",
+        options: eye_breaks_options,
+        notify: false,
+    },
 ];
 
 pub fn find(name: &str) -> Option<&'static IpcCommand> {
@@ -106,11 +115,12 @@ pub fn find(name: &str) -> Option<&'static IpcCommand> {
  * problem, which it always shows, from a confirmation it may leave out. the
  * tests call each handler wrongly, so a new kind of complaint fails there first
  */
-const PROBLEMS: [&str; 5] = [
+const PROBLEMS: [&str; 6] = [
     "usage:",
     "unknown ",
     "no player",
     "not recording",
+    "no break",
     "latitude ",
 ];
 
@@ -166,6 +176,10 @@ fn brightness_options(before: &[&str]) -> Vec<&'static str> {
 
 fn record_options(before: &[&str]) -> Vec<&'static str> {
     first_of(before, &["stop", "menu"])
+}
+
+fn eye_breaks_options(before: &[&str]) -> Vec<&'static str> {
+    first_of(before, &["skip"])
 }
 
 #[cfg(test)]
@@ -229,6 +243,9 @@ mod tests {
             ("media", "nope"),
             ("brightness", "nope"),
             ("record", "nope"),
+            ("eye-breaks", "nope"),
+            // no cycle runs in tests, so this answers before reading the service
+            ("eye-breaks", "skip"),
         ];
 
         for (name, arguments) in wrong {
@@ -241,7 +258,7 @@ mod tests {
     #[test]
     fn confirmations_are_no_problem() {
         for reply in [
-            "opened", "closed", "up", "next", "frost", "stopping", "locked",
+            "opened", "closed", "up", "next", "frost", "stopping", "locked", "skipped",
         ] {
             assert!(!problem(reply), "{reply}");
         }

@@ -84,8 +84,9 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
 - `notifications/popups.rs`: notification popups, top-right.
 - `eye_breaks.rs`: `EyeBreaks` (state file `eye-breaks`, off unless "on"),
   the 20-20-20 cycle on `timer::Cycle`, the system panel's countdown text,
-  `restart_cycle()` (called by the lock screen's view) and the popup window,
-  bottom center above the osd (see 5.15).
+  `restart_cycle()` (called by the lock screen's view), `skip()` and the
+  `eye-breaks skip` IPC, and the popup window, bottom center above the osd,
+  whose card takes a click to skip the break (see 5.15).
 - `timer.rs`: the reusable timer parts, no services: `Countdown`, `Cycle`
   (repeating phases, catches up after a gap), `remaining` ("14 min",
   "45 s"), and `card` (a timer popup's card, the osd's look). Meant for
