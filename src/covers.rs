@@ -3,7 +3,8 @@
  * an https:// link. a path is used as it is; a link is fetched once with curl
  * into $XDG_RUNTIME_DIR/pyrrha/covers, named after the link, so the same
  * cover is never fetched twice (a failed one is tried again after RETRY).
- * logging out empties the folder
+ * the folder is in memory, so only the newest KEEP covers stay there; logging
+ * out empties it
  *
  * a view asks with path(), which starts the fetch on a thread the first time;
  * the panel redraws once it's there
@@ -13,11 +14,11 @@ use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::hash::{Hash, Hasher};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::{Mutex, PoisonError};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
 
 use amane::Service;
 
@@ -31,6 +32,24 @@ const RETRY: Duration = Duration::from_secs(60);
 
 // curl writes here first, so a fetch cut short by a crash isn't taken for a cover
 const PARTIAL: &str = "part";
+
+/*
+ * how many covers stay in the folder, newest first: a few albums' worth, while
+ * a session that plays music for weeks would otherwise keep every one in memory
+ */
+const KEEP: usize = 32;
+
+/*
+ * the link is a player's (a web page can set it), so curl reads it as one
+ * address (no [1-9] or {a,b} ranges) and follows it only over http and https
+ */
+const SAFE_LINK: [&str; 5] = [
+    "--globoff",
+    "--proto",
+    "=http,https",
+    "--proto-redir",
+    "=http,https",
+];
 
 pub struct Covers {
     // fetched links and the picture each ended up as
@@ -123,6 +142,10 @@ fn fetch(url: &str) {
                     covers.failed.insert(url.clone(), Instant::now());
                 }
             }
+
+            // covers pruned from the folder, and failures old enough to try again
+            covers.fetched.retain(|_, path| path.is_file());
+            covers.failed.retain(|_, failed| failed.elapsed() < RETRY);
         }
 
         if let Some(fetching) = FETCHING
@@ -148,6 +171,7 @@ fn download(url: &str) -> Option<PathBuf> {
         let fetched = command::capture(
             Command::new("curl")
                 .args(["--silent", "--fail", "--location"])
+                .args(SAFE_LINK)
                 .args(["--max-time", command::CURL_MAX_TIME])
                 .args(["--max-filesize", MAX_SIZE])
                 .arg("--output")
@@ -162,16 +186,53 @@ fn download(url: &str) -> Option<PathBuf> {
 
             return None;
         }
+    } else {
+        // one fetched before counts as new again, so pruning keeps it
+        let _ = fs::File::options()
+            .write(true)
+            .open(&path)
+            .and_then(|file| file.set_modified(SystemTime::now()));
     }
 
     // only what amane can draw
-    if wallpaper::is_picture(&path) {
-        Some(path)
-    } else {
+    if !wallpaper::is_picture(&path) {
         let _ = fs::remove_file(&path);
 
-        None
+        return None;
     }
+
+    prune(&folder);
+
+    Some(path)
+}
+
+// removes all but the newest KEEP covers; a fetch still writing its partial file is left alone
+fn prune(folder: &Path) {
+    let Ok(entries) = fs::read_dir(folder) else {
+        return;
+    };
+
+    let covers: Vec<(PathBuf, SystemTime)> = entries
+        .filter_map(Result::ok)
+        .map(|entry| entry.path())
+        .filter(|path| path.extension().is_none() && path.is_file())
+        .filter_map(|path| {
+            let changed = fs::metadata(&path).and_then(|data| data.modified()).ok()?;
+
+            Some((path, changed))
+        })
+        .collect();
+
+    for path in beyond_newest(covers, KEEP) {
+        let _ = fs::remove_file(path);
+    }
+}
+
+// the files past the newest `keep`, by change time
+fn beyond_newest(mut files: Vec<(PathBuf, SystemTime)>, keep: usize) -> Vec<PathBuf> {
+    files.sort_by(|a, b| b.1.cmp(&a.1));
+
+    files.into_iter().skip(keep).map(|(path, _)| path).collect()
 }
 
 // the same link always gives the same name
@@ -238,6 +299,21 @@ mod tests {
 
         assert_eq!(file_path("https://example.org/cover.jpg"), None);
         assert_eq!(file_path("file://relative/cover.jpg"), None);
+    }
+
+    #[test]
+    fn only_the_newest_covers_stay() {
+        let at = |seconds| SystemTime::UNIX_EPOCH + Duration::from_secs(seconds);
+
+        let files = vec![
+            (PathBuf::from("old"), at(10)),
+            (PathBuf::from("newest"), at(30)),
+            (PathBuf::from("middle"), at(20)),
+        ];
+
+        assert_eq!(beyond_newest(files.clone(), 2), vec![PathBuf::from("old")]);
+        assert!(beyond_newest(files.clone(), 3).is_empty());
+        assert_eq!(beyond_newest(files, 0).len(), 3);
     }
 
     #[test]

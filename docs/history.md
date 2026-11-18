@@ -402,6 +402,26 @@ each finished recommendation by number; `../AGENTS.md` and the other files in
    copy is made the background stays see-through rather than decoding the
    original, since an image amane decoded but never drew is never freed.
 
+## Session: second audit (2026-11-18)
+
+1. **Close-all crash fixed.** A read-through of the threaded code found the
+   logged crash still open: close-all (a click on the bar or backdrop, `panel
+   close-all`, lock) with the screenshot menu over a panel unmapped both in one
+   frame. Reproduced on the old code (every window gone on the first try).
+   Panels now hide one at a time: `hide_time` puts each hide at least
+   `SWAP_DELAY` after the last show or hide, a waiting panel stays mapped
+   (invisible, no keys) until then, and opens and the launcher's `!` calls wait
+   for the last one (`quiet_at`). Checked live with animations off and on.
+2. **Smaller fixes.** The Tailscale login page opens without holding the
+   card's busy flag (xdg-open can run the browser in the foreground); the
+   cover folder in `$XDG_RUNTIME_DIR` keeps the newest 32 covers; curl gets
+   `--globoff` and http(s)-only redirects for players' cover links.
+3. **`Cargo.toml` path.** The docs said its `[[bin]] path` must be the
+   relative `src/main.rs`, but `amane compile` writes the absolute path through
+   `~/.config/amane` on every build (tried: set, compiled, rewritten). The
+   relative path can't stay; docs corrected.
+4. The low-priority findings went into item 55.
+
 ## Habits worth keeping
 
 - Verify before claiming: check the code, the running shell (`pgrep`, its

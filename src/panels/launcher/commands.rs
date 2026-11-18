@@ -126,7 +126,9 @@ pub fn row_hint(command: &IpcCommand) -> &'static str {
  * (`!record menu`'s screenshot menu) would show while the launcher hides,
  * which crashes the shell (see panels::SWAP_DELAY). handlers only write
  * services, which threads may do; the reply waits on the notification daemon,
- * another reason not to block the draw thread
+ * another reason not to block the draw thread. off the draw thread, a handler
+ * closing a panel with a search box wouldn't clear it (PanelDef::on_close);
+ * none does today, since the launcher has closed by then
  */
 pub fn call(command: &'static IpcCommand, arguments: Vec<String>) {
     if let Err(error) = Panels::close(LAUNCHER) {

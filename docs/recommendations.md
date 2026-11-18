@@ -33,8 +33,10 @@ Settled earlier, no need to revisit:
   which must stand out whatever accent is picked (2026-11-12).
 - Panels have a fixed size (showing, hiding or resizing a layer surface while
   another changes can crash the shell, see the upstream list).
-- Neovim: the relative `path = 'src/main.rs'` in `Cargo.toml` is what lets
-  rust-analyzer find the crate. Its `cargo check` diagnostics still fail, since
+- Neovim: a relative `path = 'src/main.rs'` in `Cargo.toml` is what lets
+  rust-analyzer find the crate, but `amane compile` writes the absolute path
+  through `~/.config/amane` on every build (seen 2026-11-18), so it doesn't
+  stay. Its `cargo check` diagnostics still fail, since
   the dependencies' build scripts need amane's `pkg-config` setup; a
   `rust-analyzer.toml` ignored the override commands, and changing the Neovim
   config was declined.
@@ -59,8 +61,30 @@ Nothing open here right now (item 4, the keybinds, is in done.md).
 
 ## Polish on what exists
 
-Nothing open here right now (items 15 and 17 were declined, see "Already
-decided").
+Items 15 and 17 were declined, see "Already decided".
+
+### 55. Audit leftovers (2026-11-18)
+- **Status:** open, low priority; found by the second audit and left as they
+  are (the crash and three bugs it found are fixed, see history.md).
+- **What:**
+  - **Bluetooth agent:** `AuthorizeService` and any unknown method are
+    answered yes (`src/bluetooth/agent.rs`). Only paired devices ask, so fine,
+    but worth knowing.
+  - **Deep nesting:** `json::parse` and the calculator recurse without a
+    limit, so a pathologically nested input overflows the stack. Inputs are
+    local programs and your own typing.
+  - **Idle wake-ups:** the osd polls every 100 ms; seven services tick each
+    second; `tailscale status` and `ip route get` run every 5 s while
+    `tailscale0` exists; `layout.rs` parses mango's whole state on every
+    window-title change.
+  - **Multi-monitor:** "Fullscreen" screenshots take every monitor (grim
+    without `-o`), "Fullscreen (record)" only the focused one; the wallpaper
+    copies learn about a new monitor or scale only at the next picker
+    refresh.
+  - **Small:** `brightness::step` builds on a cached level the monitor's own
+    buttons can make stale; `layout::set_layout` waits on mango's answer
+    without a time limit; some test folders are still named `amane-…`.
+- **To settle:** which, if any, are worth doing.
 
 ## New features
 
@@ -196,8 +220,9 @@ up as issue texts.
     ```
   - **Triggers:** any unmap while another layer surface maps, unmaps or
     resizes: a panel hiding while another shows (why `SWAP_DELAY` exists),
-    or two panels hiding together. The latter still breaks today: close-all
-    with the screenshot menu open on top of a panel.
+    or two panels hiding together (close-all with the screenshot menu open
+    on top of a panel; worked around on 2026-11-18 by hiding them one at a
+    time, `hide_time` in `src/panels/mod.rs`).
   - **Symptoms:** the process keeps running (IPC still answers) but every
     window is gone; amane doesn't exit or log on a lost connection, and
     `amane run` sends the shell's stderr to `/dev/null`, so nothing records

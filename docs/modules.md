@@ -205,7 +205,8 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
 - `notifications/mod.rs`, `card.rs`, `history.rs`: shared card, unread
   tracking (`Seen`), `send()` for the shell's own notifications, history.
 - `brightness.rs`: brightness over DDC/CI or a laptop backlight (see 5.9).
-- `covers.rs`: cover art paths/downloads for "Now playing".
+- `covers.rs`: cover art paths/downloads for "Now playing" (curl, the newest
+  `KEEP` = 32 kept in `$XDG_RUNTIME_DIR/pyrrha/covers`).
 - `layout.rs`: mango's layout and overview state per monitor (own
   `watch all-monitors` socket).
 - `session.rs`: session actions, the `lock` IPC, logind watcher.

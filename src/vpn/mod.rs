@@ -274,6 +274,10 @@ impl Vpn {
         run(move || tailscale::set_exit_node(node.as_deref()));
     }
 
+    /*
+     * opens the page without making the card busy: the browser can stay open
+     * long after, and busy would make every tailscale button wait for it
+     */
     pub fn log_in() {
         let url = Vpn::read()
             .tailscale
@@ -285,7 +289,10 @@ impl Vpn {
             return;
         }
 
-        run(move || tailscale::log_in(&url));
+        match tailscale::log_in(&url) {
+            Ok(()) => Vpn::dismiss_error(),
+            Err(error) => Vpn::write().error = Some(error),
+        }
     }
 
     pub fn dismiss_error() {

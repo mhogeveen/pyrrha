@@ -54,5 +54,13 @@ them written up for upstream.
   any exclusive surface, even hidden ones.
 - **Idle cost:** amane's `Apps` rescans icon themes every 30 s and `Network`
   re-reads saved profiles each second once started; accepted.
+- **Launched apps inherit the shell's environment:** `DesktopApp::launch` and
+  `spawn` run `sh -c` with it and send the output to `/dev/null`, so a failed
+  start shows nothing. amane's own wrapper adds only vulkan-loader and wayland
+  to `LD_LIBRARY_PATH` (harmless), but a shell restarted from a Claude Code
+  session also gets that wrapper's alsa-lib from nixpkgs unstable, built for
+  glibc 2.43; stable apps (1Password, on glibc 2.42) then fail in the dynamic
+  linker (`GLIBC_2.43 not found`). Restart with
+  `env -u LD_LIBRARY_PATH amane restart`; a reboot or login also clears it.
 - The upstream list in `recommendations.md` has these written up as issue texts.
 

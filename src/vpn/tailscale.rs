@@ -11,6 +11,7 @@
  */
 
 use std::process::{Command, Output};
+use std::thread;
 use std::time::Duration;
 
 use crate::command::{self, Failure};
@@ -195,13 +196,20 @@ pub fn set_exit_node(node: Option<&str>) -> Result<(), String> {
     run(&["set", &setting])
 }
 
-// tailscale's login page, in the browser
+/*
+ * tailscale's login page, in the browser. not waited for: outside a desktop
+ * environment xdg-open runs the browser itself, so it only returns once a
+ * browser it had to start closes. a thread reaps it, so no zombie stays behind
+ */
 pub fn log_in(url: &str) -> Result<(), String> {
-    Command::new("xdg-open")
+    let mut opener = Command::new("xdg-open")
         .arg(url)
-        .status()
-        .map_err(|error| format!("couldn't open the login page: {error}"))
-        .map(|_| ())
+        .spawn()
+        .map_err(|error| format!("couldn't open the login page: {error}"))?;
+
+    thread::spawn(move || opener.wait());
+
+    Ok(())
 }
 
 fn run(arguments: &[&str]) -> Result<(), String> {

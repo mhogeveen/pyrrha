@@ -25,7 +25,11 @@ while shown.
 The registry (`REGISTRY` in `panels/mod.rs`) names each panel, its groups and
 an `on_close` hook (resets search, selection, previews). Opening a panel closes
 those sharing a group; the replacement shows after `SWAP_DELAY` (100 ms) so the
-old surface unmaps first. The backdrop (`backdrop.rs`) is a full-screen
+old surface unmaps first. No two panels show or hide at the same moment:
+`hide_time` puts each hide at least `SWAP_DELAY` after the last show or hide,
+so a close-all with the screenshot menu over a panel hides the menu, then the
+panel; one still waiting stays mapped (invisible, taking no keys) in
+`Panels::closing`, and a show waits for `quiet_at`. The backdrop (`backdrop.rs`) is a full-screen
 transparent top-layer window **starting below the bar** (32 px margin, so the
 bar stays clickable while a panel is open); it's always mapped and only
 toggles click-through, and a click on it closes all panels. Corner panels use

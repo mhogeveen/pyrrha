@@ -41,8 +41,6 @@ impl Value {
         }
     }
 
-    // nothing reads these three since tailscale's peer list went, kept for whoever does
-    #[allow(dead_code)]
     pub fn bool(&self) -> bool {
         matches!(self, Value::Bool(true))
     }
@@ -61,6 +59,7 @@ impl Value {
         }
     }
 
+    // only the tests read these two since tailscale's peer list went, kept for whoever does
     #[allow(dead_code)]
     pub fn entries(&self) -> &[(String, Value)] {
         match self {

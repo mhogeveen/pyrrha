@@ -128,10 +128,6 @@ impl Service for BluetoothPanel {
     }
 }
 
-/*
- * scans while the panel is open and the adapter is on, and registers the
- * pairing agent again when bluetoothd comes back, since it forgets agents
- */
 // what one tick saw, for the next to compare with
 #[derive(Default)]
 struct Previous {
@@ -143,6 +139,10 @@ struct Previous {
     battery_warned: BTreeSet<String>,
 }
 
+/*
+ * scans while the panel is open and the adapter is on, and registers the
+ * pairing agent again when bluetoothd comes back, since it forgets agents
+ */
 fn tick(last: &Previous) -> Previous {
     let open = Panels::read().is_open(BLUETOOTH);
 

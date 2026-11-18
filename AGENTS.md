@@ -22,8 +22,9 @@ anything. More detail, read when the task touches it:
 - `amane compile` builds `src/` in `~/.cache/amane/project` (library in
   `~/.cache/amane/library`, overwritten each compile, so don't patch it).
   No crates: only `std`, `amane`, and libc via `unsafe extern "C"`.
-- `Cargo.toml` here is for the editor; its `[[bin]] path` must stay the
-  relative `'src/main.rs'`.
+- `Cargo.toml` here is for the editor; `amane compile` rewrites it on every
+  build (its `[[bin]] path` comes back absolute, through `~/.config/amane`),
+  so edits to it don't stay.
 - Per-machine values (programs, units, gpu, sensors, folders, weather place):
   `Settings::default()` in `src/settings.rs`, a host changing only what it
   needs in `src/settings/<hostname>.rs` (compiled; picked by hostname).
@@ -37,13 +38,17 @@ anything. More detail, read when the task touches it:
 ## Workflow
 - Build `amane compile` (zero warnings, fix every one); format
   `rustfmt --edition 2024 src/main.rs`; test `./test.sh` (`./test.sh system::`
-  filters; 265 tests), add tests for pure logic.
+  filters; 271 tests), add tests for pure logic.
 - Name: the shell is Pyrrha, but the binary and process stay `amane-shell`
   (amane generates the Cargo package and picks that name); state folders are
   `pyrrha/`, moved from `amane-shell/` once at start (`state::migrate`).
 - Check a host `~/.cache/amane/amane-shell doctor` (runs instead of the shell;
   lists missing programs, units, services; exit 1 when a required one is missing).
-- Restart `amane restart` after a compile (loses panel state; fine for checks).
+- Restart `env -u LD_LIBRARY_PATH amane restart` after a compile (loses panel
+  state; fine for checks). The shell passes its environment to every app it
+  launches, and Claude Code's wrapper sets `LD_LIBRARY_PATH` to unstable's
+  alsa-lib (needs glibc 2.43), so stable apps like 1Password die on start
+  (`docs/amane.md`).
 - IPC `amane ipc call <name> ...`: `panel open|close|toggle <name>`,
   `close-all`, `list`; `lock`; `accent [next|<name>]`;
   `weather [refresh|location <lat> <lon> <name>]`; `media play-pause|next|previous`;
@@ -74,7 +79,7 @@ anything. More detail, read when the task touches it:
 - Git: the user commits; don't commit, push or stage. Check `git status` /
   `git log` first; don't revert the user's changes.
 - Recommendations: keep statuses current; built items move to `docs/done.md` with
-  their number; new ideas get the next number (54 was the last).
+  their number; new ideas get the next number (55 was the last).
 - Code style: lowercase comments, `/* */` blocks, `//` lines, saying why;
   every module starts with a block comment; descriptive names, no
   abbreviations; constants for every size and timing.
@@ -82,12 +87,15 @@ anything. More detail, read when the task touches it:
 
 ## Rules that break things when ignored
 - Services (`X::read()`/`X::write()`): never write one inside a view (the view
-  holds a read lock: deadlock); start a thread or set a static instead. One
-  lock at a time. A service's `listen()` starts on first read.
+  holds a read lock: deadlock); start a thread or set a static instead. Never
+  write while holding any guard, and never read a service whose guard you
+  already hold (copy out, let go, then read the next); views may hold several
+  different reads at once. A service's `listen()` starts on first read.
 - Layer surfaces: showing, hiding or resizing one while another changes can
   crash the shell (`Protocol error 0 on zwlr_layer_surface_v1`). Panels have
-  fixed sizes; popups stay mapped and never resize. No windows that show and
-  hide quickly.
+  fixed sizes and show or hide one at a time, `SWAP_DELAY` apart
+  (`hide_time`, `quiet_at` in `src/panels/mod.rs`); popups stay mapped and
+  never resize. No windows that show and hide quickly.
 - No `Canvas` (arcs, lines, paths) and no `.rotate()`: both go through
   vello, whose compute shaders hang this GPU
   (amdgpu "ring gfx timeout", GPU reset, shell gone). Build shapes from
