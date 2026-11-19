@@ -128,7 +128,9 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
     (Enter copies, `copy()` here).
   - `apps.rs`: apps by frecency (`usage.rs`), a match on the program run
     ranking below one on the name.
-  - `run.rs`: `>cmd` in the background, `>>cmd` in the settings' terminal.
+  - `run.rs`: `>cmd` in the background, `>>cmd` in the settings' terminal;
+    each lists its earlier commands under the typed one (`run_history.rs`,
+    newest first, fuzzy-filtered), Tab puts one in the box.
   - `panel_names.rs`: `:name` opens a panel (`panels::launchable`, by name or
     `PanelDef::description`).
   - `commands.rs`: `!name args` closes the launcher, then calls an IPC command
@@ -259,5 +261,7 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
   through `write_atomically` (temp file + rename, also used by the
   notification history); `runtime_dir()` and `runtime_path(name)` for
   `$XDG_RUNTIME_DIR/pyrrha`.
+- `run_history.rs`: the launcher's `>` and `>>` commands, 50 per mode, newest
+  first, in the state files `runs` and `terminal-runs`.
 - `calendar.rs`, `calculator.rs`, `usage.rs`, `clipboard_preview.rs`, `clock.rs`.
 

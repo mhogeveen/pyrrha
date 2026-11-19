@@ -38,7 +38,7 @@ anything. More detail, read when the task touches it:
 ## Workflow
 - Build `amane compile` (zero warnings, fix every one); format
   `rustfmt --edition 2024 src/main.rs`; test `./test.sh` (`./test.sh system::`
-  filters; 274 tests), add tests for pure logic.
+  filters; 280 tests), add tests for pure logic.
 - Name: the shell is Pyrrha, but the binary and process stay `amane-shell`
   (amane generates the Cargo package and picks that name); state folders are
   `pyrrha/`, moved from `amane-shell/` once at start (`state::migrate`).

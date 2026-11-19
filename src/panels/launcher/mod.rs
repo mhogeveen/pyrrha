@@ -6,7 +6,8 @@
  *
  *   =12*7      calculates, enter copies the answer
  *   >command   runs it in the background, like a keybind
- *   >>command  runs it in a terminal, then leaves your shell there
+ *   >>command  runs it in a terminal, then leaves your shell there; both list
+ *              the commands run that way before, Tab puts one in the box
  *   :wallpaper opens that panel, by name or what it's for
  *   !accent    calls one of the shell's ipc commands, the reply as a notification
  *
@@ -29,6 +30,7 @@ use super::picker::{self, Picker};
 use super::{LAUNCHER, PanelDef, Panels};
 use crate::calculator;
 use crate::ipc::IpcCommand;
+use crate::run_history::RunHistory;
 use crate::theme::Theme;
 use crate::usage::Usage;
 
@@ -48,6 +50,9 @@ pub enum Entry {
     Run {
         command: String,
         terminal: bool,
+
+        // one run before, from the history, rather than what's typed
+        earlier: bool,
     },
 
     Panel(&'static PanelDef),
@@ -120,12 +125,25 @@ impl Picker for Launcher {
                 .map(|answer| vec![Entry::Answer(answer)])
                 .unwrap_or_default(),
 
-            Mode::Run { command, terminal } if !command.is_empty() => vec![Entry::Run {
-                command: String::from(command),
-                terminal,
-            }],
+            Mode::Run { command, terminal } => {
+                let typed = (!command.is_empty()).then(|| Entry::Run {
+                    command: String::from(command),
+                    terminal,
+                    earlier: false,
+                });
 
-            Mode::Run { .. } => Vec::new(),
+                let history = RunHistory::read();
+
+                let earlier = run::matching(history.commands(terminal), command)
+                    .into_iter()
+                    .map(|earlier| Entry::Run {
+                        command: earlier.clone(),
+                        terminal,
+                        earlier: true,
+                    });
+
+                typed.into_iter().chain(earlier).collect()
+            }
 
             Mode::Panels(query) => panel_names::matching(query)
                 .into_iter()
@@ -144,13 +162,20 @@ impl Picker for Launcher {
                 list::detail_row(t, &format!("= {answer}"), "Enter copies", selected, false)
             }
 
-            Entry::Run { command, terminal } => list::detail_row(
-                t,
-                &format!("Run {command}"),
-                run::place(*terminal),
-                selected,
-                false,
-            ),
+            // the typed command says Run, so it stands out above the earlier ones
+            Entry::Run {
+                command,
+                terminal,
+                earlier,
+            } => {
+                let label = if *earlier {
+                    command.clone()
+                } else {
+                    format!("Run {command}")
+                };
+
+                list::detail_row(t, &label, run::place(*terminal), selected, false)
+            }
 
             Entry::Panel(panel) => {
                 list::detail_row(t, panel.name, panel.description, selected, false)
@@ -176,7 +201,9 @@ impl Picker for Launcher {
 
             Entry::Answer(answer) => copy(answer),
 
-            Entry::Run { command, terminal } => run::start(command, terminal),
+            Entry::Run {
+                command, terminal, ..
+            } => run::start(command, terminal),
 
             // replaces the launcher, which then needs no closing (see picker::choose)
             Entry::Panel(panel) => {
@@ -193,8 +220,8 @@ impl Picker for Launcher {
         &[
             ("firefox", "search apps, most used first"),
             ("=12*7", "calculate"),
-            (">command", "run in the background"),
-            (">>command", "run in a terminal, then your shell"),
+            (">command", "run in the background, earlier ones below"),
+            (">>command", "run in a terminal, Tab edits an earlier one"),
             (":wallpaper", "open a panel"),
             ("!accent next", "call a shell command, Tab completes"),
         ]
@@ -218,11 +245,26 @@ impl Picker for Launcher {
         }
     }
 
-    // only ! calls complete; in the other modes Tab does nothing
+    /*
+     * ! calls complete up to their next word, and an earlier > or >> command
+     * fills the box whole, to change before running; elsewhere Tab does nothing
+     */
     fn complete(query: &str, entry: &Entry) -> Option<String> {
         match (mode(query), entry) {
             (Mode::Ipc(_), Entry::Ipc { command, arguments }) => {
                 Some(commands::completed(command, arguments))
+            }
+            (
+                Mode::Run { .. },
+                Entry::Run {
+                    command,
+                    terminal,
+                    earlier: true,
+                },
+            ) => {
+                let prefix = if *terminal { RUN_IN_TERMINAL } else { RUN };
+
+                Some(format!("{prefix}{command}"))
             }
             _ => None,
         }

@@ -36,6 +36,7 @@ mod notifications;
 mod osd;
 mod panels;
 mod recording;
+mod run_history;
 mod screenshot;
 mod session;
 mod settings;

@@ -787,3 +787,17 @@ are kept, so references between the two files still work.
   fill. ffmpeg runs without the shell's
   `LD_LIBRARY_PATH`, like wf-recorder (item 34). Tests: `wallpaper_copies::`.
 - **Outside the shell:** `ffmpeg` in `~/.nixos/home/packages.nix`.
+
+### 56. Launcher run history
+- **Status:** done (2026-11-19): `>` and `>>` each remember the commands run
+  through them (50 each, a repeat moves to the top). A bare `>` or `>>` lists
+  them newest first; typing keeps the "Run …" row on top with the matching
+  earlier commands below (fuzzy, ties newest first). Enter or a click runs
+  one; Tab puts it in the search box to change first.
+- **How it fits:** `src/run_history.rs`, the `RunHistory` service (read on
+  first use, saved on a thread like `usage.rs`), in
+  `~/.local/state/pyrrha/runs` and `terminal-runs`, one command per line.
+  `run::matching` picks the rows, `run::start` records; `Entry::Run` has
+  `earlier` so the history rows drop the "Run" label and complete on Tab.
+  No way to delete one entry from the panel (Delete is `Key::Other`); edit
+  the file. Tests: `run_history::`, `launcher::run::`.
