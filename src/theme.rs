@@ -4,6 +4,11 @@
  * the five accent colors themselves are in AccentColor; every view calls
  * theme(), which reads the Accent service, so picking a new accent redraws
  * every window by itself: the bar, panels, popups, lock screen
+ *
+ * the strata file manager follows too: its cendre theme file
+ * (~/.config/strata/themes/cendre.toml) links to one kept in the state folder
+ * (~/.nixos/home/strata.nix), written here at launch and on every new accent;
+ * strata re-reads it when it changes
  */
 
 use std::fs;
@@ -14,6 +19,9 @@ use crate::state;
 
 // the file in the state folder the accent is kept in
 const STATE: &str = "accent";
+
+// the file in the state folder strata's theme links to
+const STRATA_THEME: &str = "strata-theme.toml";
 
 pub struct Theme {
     // the one picked in the system panel, used for every accent in the shell
@@ -158,6 +166,8 @@ impl Accent {
         if let Err(error) = state::save(STATE, color.name()) {
             eprintln!("theme: couldn't save the accent: {error}");
         }
+
+        write_strata_theme();
     }
 
     pub fn next() {
@@ -165,6 +175,48 @@ impl Accent {
 
         Accent::set(next);
     }
+}
+
+/*
+ * strata's theme in the shell's colors and accent; called at launch, so the
+ * file is there before strata first reads it, and after every new accent. a
+ * file that can't be written only leaves strata on the colors it has
+ */
+pub fn write_strata_theme() {
+    if let Err(error) = state::save(STRATA_THEME, &strata_theme(&theme())) {
+        eprintln!("theme: couldn't write strata's theme: {error}");
+    }
+}
+
+/*
+ * strata's nine interface colors and five syntax colors (its docs/themes.md),
+ * mapped as the shell uses them: panel fill as background, the selected-row
+ * fill as selection and border; syntax as cendre colors code, every literal sap
+ */
+fn strata_theme(theme: &Theme) -> String {
+    let colors = [
+        ("background", theme.bg0),
+        ("surface", theme.bg1),
+        ("text", theme.fg),
+        ("accent", theme.accent),
+        ("danger", theme.error),
+        ("muted", theme.bg2),
+        ("highlight", theme.bg3),
+        ("border", theme.bg3),
+        ("dim_text", theme.fg_dim),
+        ("syntax_keyword", AccentColor::Cinder.color()),
+        ("syntax_string", AccentColor::Sap.color()),
+        ("syntax_constant", AccentColor::Sap.color()),
+        ("syntax_type", AccentColor::Frost.color()),
+        ("syntax_preprocessor", AccentColor::Cinder.color()),
+    ];
+
+    colors.iter().fold(
+        String::from(
+            "# written by pyrrha (src/theme.rs) on every accent change\nname = \"Cendre\"\n",
+        ),
+        |file, (key, color)| file + &format!("{key} = \"{}\"\n", color.hex()),
+    )
 }
 
 /*
@@ -213,6 +265,20 @@ mod tests {
             Some(first)
         );
         assert_eq!(AccentColor::from_name("no such accent"), None);
+    }
+
+    #[test]
+    fn strata_gets_the_picked_accent_and_the_shell_colors() {
+        let mut colors = theme();
+        colors.accent = AccentColor::Sap.color();
+
+        let file = strata_theme(&colors);
+
+        assert!(file.contains("name = \"Cendre\"\n"));
+        assert!(file.contains("accent = \"#99af6b\"\n"));
+        assert!(file.contains("background = \"#171311\"\n"));
+        assert!(file.contains("syntax_type = \"#4e89a2\"\n"));
+        assert_eq!(file.lines().filter(|line| line.contains(" = ")).count(), 15);
     }
 
     #[test]
