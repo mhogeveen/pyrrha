@@ -18,6 +18,7 @@
  */
 
 mod almanac;
+mod dots;
 mod epoch;
 mod forecast;
 mod ledger;
@@ -92,11 +93,14 @@ pub enum Design {
 
     // art: a pine forest at night in rows, far to near, a moon in the accent low behind them
     Pines,
+
+    // art: dot paper, a quiet grid of dots
+    Dots,
 }
 
 impl Design {
     // in the order the picker shows them: none, the informative ones, then the art
-    pub const ALL: [Design; 10] = [
+    pub const ALL: [Design; 11] = [
         Design::None,
         Design::Ledger,
         Design::Almanac,
@@ -107,6 +111,7 @@ impl Design {
         Design::Epoch,
         Design::Ridges,
         Design::Pines,
+        Design::Dots,
     ];
 
     pub fn name(self) -> &'static str {
@@ -121,7 +126,13 @@ impl Design {
             Design::Orbit => "orbit",
             Design::Ridges => "ridges",
             Design::Pines => "pines",
+            Design::Dots => "dots",
         }
+    }
+
+    // whether the corner ticks frame it; dot paper is a sheet to the edges, ticks would read as stray dots
+    fn framed(self) -> bool {
+        !matches!(self, Design::None | Design::Dots)
     }
 
     fn from_name(name: &str) -> Option<Design> {
@@ -332,10 +343,13 @@ pub fn page(design: Design, page: Page, moment: &Moment, t: &Theme) -> Stack {
         Design::Orbit => orbit::layers(page, moment, t),
         Design::Ridges => ridges::layers(page, moment, t),
         Design::Pines => pines::layers(page, moment, t),
+        Design::Dots => dots::layers(page, moment, t),
     };
 
     // last, so the ticks frame the page over whatever a design draws in its corners
-    layers.extend(corner_ticks(page, t));
+    if design.framed() {
+        layers.extend(corner_ticks(page, t));
+    }
 
     Stack::new(layers).width(Parent).height(Parent)
 }

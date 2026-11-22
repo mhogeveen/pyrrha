@@ -80,6 +80,10 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
     row, faint stars. Same-coloured shapes overlap rather than meet edge to
     edge (tiers reach into the ground), so no light seams at fractional
     positions; no trunks, which let the sky show as dashed lines.
+  - `desktop/dots.rs` (art): dot paper, 3 px dots 40 px apart (at
+    1440 high) below the bar, centred (`grid`), a `Row` per line in one
+    `Column`, each shaded between `bg2` and `bg4` from a fixed seed (`shade`,
+    `mix`); the small time; no corner ticks (`Design::framed`).
 - `osd.rs`: the volume/brightness popup and the `media` IPC (see 5.8).
 - `notifications/popups.rs`: notification popups, top-right.
 - `eye_breaks.rs`: `EyeBreaks` (state file `eye-breaks`, off unless "on"),

@@ -801,3 +801,14 @@ are kept, so references between the two files still work.
   `earlier` so the history rows drop the "Run" label and complete on Tab.
   No way to delete one entry from the panel (Delete is `Key::Other`); edit
   the file. Tests: `run_history::`, `launcher::run::`.
+
+### 57. Dot paper desktop
+- **Status:** done (2026-11-22): a **dots** design, last in the Desktops
+  row: dot paper, a grid of small round dots below the bar, each its own
+  faint shade between `bg2` and `bg4` (fixed seed, most near the faint end),
+  no corner ticks (`Design::framed`), 3 px dots 40 px
+  apart at 1440 high, centred so the margins match, with the art designs'
+  small time at the bottom left. The same sheet every day.
+- **How it fits:** `src/desktop/dots.rs`; each line of dots is one `Row`,
+  the lines one `Column` (about 64 × 35 rounded rectangles on this monitor,
+  no Canvas). `grid` works out the count and margin. Tests: `desktop::dots::`.
