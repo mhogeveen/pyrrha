@@ -808,7 +808,10 @@ are kept, so references between the two files still work.
   faint shade between `bg2` and `bg4` (fixed seed, most near the faint end),
   no corner ticks (`Design::framed`), 3 px dots 40 px
   apart at 1440 high, centred so the margins match, with the art designs'
-  small time at the bottom left. The same sheet every day.
+  small time at the bottom left. The same sheet every day, except one dot
+  in the accent for the time: it walks through the dots in reading order,
+  midnight top left to the end of the day bottom right (`time_dot`, one or
+  two dots a minute).
 - **How it fits:** `src/desktop/dots.rs`; each line of dots is one `Row`,
   the lines one `Column` (about 64 × 35 rounded rectangles on this monitor,
   no Canvas). `grid` works out the count and margin. Tests: `desktop::dots::`.

@@ -4,7 +4,9 @@
  * time in the corner and no corner ticks. each dot gets its own faint shade,
  * mostly near the darkest and a few a little brighter, like ink that took
  * unevenly; the shades come from a fixed seed, so the sheet is the same every
- * day and in its thumbnail
+ * day and in its thumbnail. one dot is in the accent: the time, walking
+ * through the sheet in reading order from midnight at the top left to the end
+ * of the day at the bottom right (time_dot)
  *
  * a row of dots is one Row and the rows one Column, so the page stays a few
  * dozen widgets deep rather than one placed widget per dot. dots are rounded
@@ -41,18 +43,28 @@ pub fn layers(page: Page, moment: &Moment, t: &Theme) -> Vec<Box<dyn Widget>> {
     // the same sequence for the page and the thumbnail, dot by dot from the top left
     let mut random = Random(SEED);
 
+    // the one dot in the accent: how far through the day it is, in reading order
+    let now = time_dot(moment.hour, moment.minute, rows * columns);
+
     let sheet: Vec<Box<dyn Widget>> = (0..rows)
-        .map(|_| -> Box<dyn Widget> {
+        .map(|row_index| -> Box<dyn Widget> {
             let row: Vec<Box<dyn Widget>> = (0..columns)
-                .map(|_| -> Box<dyn Widget> {
+                .map(|column_index| -> Box<dyn Widget> {
+                    // drawn for every dot, so the others keep their shades whatever the time
                     let amount = shade(random.unit());
+
+                    let fill = if row_index * columns + column_index == now {
+                        t.accent
+                    } else {
+                        mix(t.bg2, t.bg4, amount)
+                    };
 
                     Box::new(
                         Rectangle::new()
                             .width(dot)
                             .height(dot)
                             .radius(Full)
-                            .fill(mix(t.bg2, t.bg4, amount)),
+                            .fill(fill),
                     )
                 })
                 .collect();
@@ -82,6 +94,15 @@ fn grid(length: f32, pitch: f32, dot: f32) -> (usize, f32) {
     let span = (count - 1) as f32 * pitch + dot;
 
     (count, (length - span) / 2.0)
+}
+
+const MINUTES_PER_DAY: usize = 24 * 60;
+
+// which of the dots (counted in reading order) stands for this minute: midnight the first, 23:59 near the last
+fn time_dot(hour: u32, minute: u32, dots: usize) -> usize {
+    let minutes = (hour as usize * 60 + minute as usize).min(MINUTES_PER_DAY - 1);
+
+    minutes * dots / MINUTES_PER_DAY
 }
 
 // a random 0 to 1 as a dot's shade between FAINTEST and BRIGHTEST, leaning faint
@@ -124,6 +145,14 @@ mod tests {
     fn too_small_for_a_dot() {
         assert_eq!(grid(30.0, 40.0, 4.0), (0, 0.0));
         assert_eq!(grid(100.0, 0.0, 4.0), (0, 0.0));
+    }
+
+    #[test]
+    fn the_time_walks_through_the_dots() {
+        assert_eq!(time_dot(0, 0, 2240), 0);
+        assert_eq!(time_dot(12, 0, 2240), 1120);
+        assert!(time_dot(23, 59, 2240) < 2240);
+        assert_eq!(time_dot(12, 0, 0), 0);
     }
 
     #[test]

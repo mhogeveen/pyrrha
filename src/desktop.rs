@@ -94,7 +94,7 @@ pub enum Design {
     // art: a pine forest at night in rows, far to near, a moon in the accent low behind them
     Pines,
 
-    // art: dot paper, a quiet grid of dots
+    // art: dot paper, a quiet grid of dots, one in the accent for the time of day
     Dots,
 }
 
