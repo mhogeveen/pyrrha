@@ -230,7 +230,7 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
 - `health.rs`: cpu/gpu temperatures from `/sys/class/hwmon` (`Temperatures`,
   also the system panel's Temp row) and the background health check that
   notifies once per problem (see 5.14).
-- `theme.rs`: `Theme` colors, `Accent` service and the `accent` IPC; writes strata's theme (`strata-theme.toml` in the state folder, linked from `~/.config/strata/themes/cendre.toml` by `~/.nixos/home/strata.nix`) at launch and on every accent change.
+- `theme.rs`: `Theme` colors, `Accent` service and the `accent` IPC; writes strata's theme (`strata-theme.toml` in the state folder, linked from `~/.config/strata/themes/cendre.toml` by `~/.nixos/home/strata.nix`) and aoide's (`aoide-theme.toml` in the state folder, for `~/.config/aoide/themes/cendre.toml` to link to; it follows the cendre theme in aoide's `contrib/themes`) at launch and on every accent change.
 - `animations.rs`: the `Animations` on/off setting (state file
   `animations`), `DURATION` and `follow()` (see 5.11).
 - `night_light.rs`: `NightLight` (whether wlsunset.service runs), read and

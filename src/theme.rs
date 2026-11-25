@@ -9,6 +9,10 @@
  * (~/.config/strata/themes/cendre.toml) links to one kept in the state folder
  * (~/.nixos/home/strata.nix), written here at launch and on every new accent;
  * strata re-reads it when it changes
+ *
+ * and so does the aoide music player, the same way: aoide-theme.toml in the
+ * state folder, for ~/.config/aoide/themes/cendre.toml to link to; aoide
+ * watches the link's target and recolors a running player at once
  */
 
 use std::fs;
@@ -22,6 +26,15 @@ const STATE: &str = "accent";
 
 // the file in the state folder strata's theme links to
 const STRATA_THEME: &str = "strata-theme.toml";
+
+// the file in the state folder aoide's theme links to
+const AOIDE_THEME: &str = "aoide-theme.toml";
+
+/*
+ * cendre's ok green, the low end of aoide's bars; not in Theme, since the
+ * shell itself shows no status colors
+ */
+const OK: Color = Color::rgb(0x43, 0xb1, 0x6a);
 
 pub struct Theme {
     // the one picked in the system panel, used for every accent in the shell
@@ -42,8 +55,7 @@ pub struct Theme {
     pub fg_dim: Color,
     pub comment: Color,
 
-    // part of the palette, not used anywhere yet
-    #[allow(dead_code)]
+    // not drawn by the shell yet; the lines in aoide's theme
     pub gutter: Color,
     pub bg_deep: Color,
     pub bg0: Color,
@@ -167,7 +179,7 @@ impl Accent {
             eprintln!("theme: couldn't save the accent: {error}");
         }
 
-        write_strata_theme();
+        write_app_themes();
     }
 
     pub fn next() {
@@ -178,13 +190,20 @@ impl Accent {
 }
 
 /*
- * strata's theme in the shell's colors and accent; called at launch, so the
- * file is there before strata first reads it, and after every new accent. a
- * file that can't be written only leaves strata on the colors it has
+ * the theme files of the apps that follow the shell, in its colors and accent;
+ * called at launch, so the files are there before an app first reads them, and
+ * after every new accent. a file that can't be written only leaves that app on
+ * the colors it has
  */
-pub fn write_strata_theme() {
-    if let Err(error) = state::save(STRATA_THEME, &strata_theme(&theme())) {
+pub fn write_app_themes() {
+    let colors = theme();
+
+    if let Err(error) = state::save(STRATA_THEME, &strata_theme(&colors)) {
         eprintln!("theme: couldn't write strata's theme: {error}");
+    }
+
+    if let Err(error) = state::save(AOIDE_THEME, &aoide_theme(&colors)) {
+        eprintln!("theme: couldn't write aoide's theme: {error}");
     }
 }
 
@@ -216,6 +235,55 @@ fn strata_theme(theme: &Theme) -> String {
             "# written by pyrrha (src/theme.rs) on every accent change\nname = \"Cendre\"\n",
         ),
         |file, (key, color)| file + &format!("{key} = \"{}\"\n", color.hex()),
+    )
+}
+
+/*
+ * aoide's nineteen color roles and the colors of its bars (the cendre theme in
+ * its contrib/themes, which this follows), mapped as the shell uses them: the
+ * accent for everything that stands out (the active source, the playing track,
+ * the played part of the progress bar, matches, the play icon), the
+ * selected-row fill under the cursor row, and no status colors but warning
+ * and error. the background stays the terminal's own, so the player meets
+ * the terminal's padding without an edge. the bars alone don't follow the
+ * accent: a level meter from ok green through warning to error
+ */
+fn aoide_theme(theme: &Theme) -> String {
+    let roles = [
+        ("accent", theme.accent),
+        ("playing", theme.accent),
+        ("progress_done", theme.accent),
+        ("match_bg", theme.accent),
+        ("success", theme.accent),
+        ("text", theme.fg),
+        ("dimmed", theme.fg_dim),
+        ("title", theme.fg),
+        ("border", theme.gutter),
+        ("selection_fg", theme.fg),
+        ("selection_bg", theme.bg3),
+        ("visual", theme.bg2),
+        ("match_fg", theme.on_accent),
+        ("progress_remaining", theme.bg4),
+        ("info", theme.fg),
+        ("warning", theme.warning),
+        ("error", theme.error),
+        ("attention", theme.warning),
+    ];
+
+    let bars = [OK, theme.warning, theme.error]
+        .map(|color| format!("\"{}\"", color.hex()))
+        .join(", ");
+
+    let file = roles.iter().fold(
+        String::from(
+            "# written by pyrrha (src/theme.rs) on every accent change\nbackground = \"default\"\n",
+        ),
+        |file, (role, color)| file + &format!("{role} = \"{}\"\n", color.hex()),
+    );
+
+    file + &format!(
+        "\n[viz]\ncolors = [{bars}]\npeak_color = \"{}\"\n",
+        theme.fg.hex()
     )
 }
 
@@ -279,6 +347,35 @@ mod tests {
         assert!(file.contains("background = \"#171311\"\n"));
         assert!(file.contains("syntax_type = \"#4e89a2\"\n"));
         assert_eq!(file.lines().filter(|line| line.contains(" = ")).count(), 15);
+    }
+
+    #[test]
+    fn aoide_gets_the_picked_accent_wherever_something_stands_out() {
+        let mut colors = theme();
+        colors.accent = AccentColor::Sap.color();
+
+        let file = aoide_theme(&colors);
+
+        for role in ["accent", "playing", "progress_done", "match_bg", "success"] {
+            assert!(file.contains(&format!("{role} = \"#99af6b\"\n")), "{role}");
+        }
+
+        // nowhere else, the bars included
+        assert_eq!(file.matches("#99af6b").count(), 5);
+        assert!(file.contains("background = \"default\"\n"));
+        assert!(file.contains("selection_bg = \"#362f2c\"\n"));
+        assert!(file.contains("border = \"#4e4641\"\n"));
+        assert!(file.contains("attention = \"#f4a21c\"\n"));
+        assert!(file.contains("\n[viz]\ncolors = [\"#43b16a\", \"#f4a21c\", \"#d25780\"]\n"));
+        assert!(file.ends_with("peak_color = \"#e6d5c2\"\n"));
+
+        // every role aoide has, each once, all before the bars' table
+        let roles = file.split("[viz]").next().unwrap_or_default();
+
+        assert_eq!(
+            roles.lines().filter(|line| line.contains(" = ")).count(),
+            19
+        );
     }
 
     #[test]

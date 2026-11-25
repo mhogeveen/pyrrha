@@ -60,8 +60,8 @@ fn main() {
     // moves the state folders from before the rename, before anything writes them
     state::migrate();
 
-    // strata's theme file, in the accent kept from last time (theme.rs)
-    theme::write_strata_theme();
+    // strata's and aoide's theme files, in the accent kept from last time (theme.rs)
+    theme::write_app_themes();
 
     // locks on suspend and `loginctl lock-session`
     session::watch_logind();
