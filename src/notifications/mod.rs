@@ -58,6 +58,29 @@ pub fn has_unread() -> bool {
         .any(|notification| notification.received() > until)
 }
 
+/*
+ * whether a critical notification is in the center, seen or not: live ones and
+ * the ones restored after a restart. the bar's snowflake only lights up for
+ * these, since lighting up for every notification was distracting. reads
+ * Notifications, so a view that asks redraws when one arrives or goes away
+ */
+// one service read at a time, each let go before the next
+pub fn has_critical() -> bool {
+    let live = Notifications::read()
+        .list()
+        .iter()
+        .any(|notification| notification.urgency() == Urgency::Critical);
+
+    if live {
+        return true;
+    }
+
+    history::History::read()
+        .restored()
+        .iter()
+        .any(|kept| kept.urgency == Urgency::Critical)
+}
+
 // nerd font material design glyphs
 pub const ICON_BELL: &str = "\u{f009a}";
 pub const ICON_BELL_OUTLINE: &str = "\u{f009c}";

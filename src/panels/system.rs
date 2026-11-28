@@ -179,7 +179,7 @@ fn header(t: &Theme, info: &SystemInfo) -> Row {
                 .elide(),
         );
 
-    // the accent while something waits unread, the same as the bar's snowflake
+    // the accent while something waits unread (the bar's snowflake only for critical ones)
     let (bell, color) = if notifications::has_unread() {
         (ICON_BELL, t.accent)
     } else {

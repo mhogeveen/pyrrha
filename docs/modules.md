@@ -20,7 +20,7 @@ bar, backdrop, notification popups, osd, every panel, and the lock screen.
   symbol `[S]` (opens the layout picker), the clock (opens the calendar),
   and icons: a red privacy dot while recording or sharing the screen, an orange
   `theme.warning` dot while the idle timers are off (opens the system panel), audio, network with a VPN shield badge, bluetooth, and the NixOS
-  snowflake (opens the system panel, accent while notifications are unread).
+  snowflake (opens the system panel, accent while a critical notification is in the center).
 - `clock.rs`: the `Clock` service, waking at each minute with
   `clock_nanosleep` on `CLOCK_REALTIME`; the bar's clock text ("17:05 Wed 11
   Nov | 󰖙 4°", the weather once a forecast is in; English whatever `LC_TIME`

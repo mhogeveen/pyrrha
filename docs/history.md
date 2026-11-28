@@ -433,6 +433,13 @@ each finished recommendation by number; `../AGENTS.md` and the other files in
    work phase at 15 s: the ipc and a virtual pointer click (wlrctl) each took
    the card away, a click beside it didn't.
 
+## Session: snowflake only for critical (2026-11-28)
+
+1. The bar's snowflake lit up in the accent for any unread notification,
+   which was distracting. It now lights up only while a critical one is in
+   the center (live or restored, seen or not: `notifications::has_critical`).
+   The system panel's bell keeps showing unread ones.
+
 ## Habits worth keeping
 
 - Verify before claiming: check the code, the running shell (`pgrep`, its

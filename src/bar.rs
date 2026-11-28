@@ -298,12 +298,12 @@ fn status_button(panel: &'static str, icon: impl Widget + 'static) -> Rectangle 
 }
 
 /*
- * the nixos snowflake, in the accent while notifications wait unread; opens the
- * system panel, which has the ways into the wallpaper picker, the notification
- * center and the session menu
+ * the nixos snowflake, in the accent while a critical notification is in the
+ * center (any notification was distracting); opens the system panel, which has
+ * the ways into the wallpaper picker, the notification center and the session menu
  */
 fn system(t: &Theme) -> Rectangle {
-    let color = if notifications::has_unread() {
+    let color = if notifications::has_critical() {
         t.accent
     } else {
         t.fg_dim
